@@ -14,7 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          career_goal: string | null
+          college: string | null
+          created_at: string
+          degree: string | null
+          education: string | null
+          full_name: string | null
+          github_url: string | null
+          graduation_year: number | null
+          id: string
+          interests: string[] | null
+          resume_url: string | null
+          skills: string[] | null
+        }
+        Insert: {
+          career_goal?: string | null
+          college?: string | null
+          created_at?: string
+          degree?: string | null
+          education?: string | null
+          full_name?: string | null
+          github_url?: string | null
+          graduation_year?: number | null
+          id?: string
+          interests?: string[] | null
+          resume_url?: string | null
+          skills?: string[] | null
+        }
+        Update: {
+          career_goal?: string | null
+          college?: string | null
+          created_at?: string
+          degree?: string | null
+          education?: string | null
+          full_name?: string | null
+          github_url?: string | null
+          graduation_year?: number | null
+          id?: string
+          interests?: string[] | null
+          resume_url?: string | null
+          skills?: string[] | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
