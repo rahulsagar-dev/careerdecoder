@@ -5,6 +5,9 @@ import Signup from "@/pages/Signup";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import Dashboard from "@/pages/Dashboard";
+import ProfileSetup from "@/pages/ProfileSetup";
+import Profile from "@/pages/Profile";
+import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 
@@ -15,7 +18,11 @@ const AppRoutes = () => (
     <Route path="/signup" element={<Signup />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/reset-password" element={<ResetPassword />} />
+    <Route path="/profile/setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+    <Route path="/skill-analysis" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
+    <Route path="/career-recommendations" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
