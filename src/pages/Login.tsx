@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { profileService } from "@/services/profileService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +26,8 @@ const Login = () => {
     try {
       await signIn(email, password);
       toast.success("Welcome back!");
-      navigate("/dashboard");
+      const profile = await profileService.getProfile();
+      navigate(profile ? "/dashboard" : "/profile/setup");
     } catch (error: any) {
       toast.error(error.message || "Invalid credentials");
     } finally {
