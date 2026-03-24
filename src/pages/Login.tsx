@@ -26,7 +26,8 @@ const Login = () => {
     try {
       await signIn(email, password);
       toast.success("Welcome back!");
-      navigate("/dashboard");
+      const profile = await profileService.getProfile();
+      navigate(profile ? "/dashboard" : "/profile/setup");
     } catch (error: any) {
       toast.error(error.message || "Invalid credentials");
     } finally {
