@@ -1,1 +1,7 @@
 project_id = "voydvjkvsathgckzcjgp"
+
+[functions.generate-career-recommendations]
+verify_jwt = false
+
+[functions.generate-skill-analysis]
+verify_jwt = false
