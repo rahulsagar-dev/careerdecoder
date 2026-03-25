@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      career_recommendations: {
+        Row: {
+          career_title: string
+          created_at: string
+          description: string | null
+          id: string
+          match_score: number
+          missing_skills: string[] | null
+          required_skills: string[] | null
+          salary_range: string | null
+          user_id: string
+        }
+        Insert: {
+          career_title: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          match_score?: number
+          missing_skills?: string[] | null
+          required_skills?: string[] | null
+          salary_range?: string | null
+          user_id: string
+        }
+        Update: {
+          career_title?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          match_score?: number
+          missing_skills?: string[] | null
+          required_skills?: string[] | null
+          salary_range?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           career_goal: string | null
@@ -56,6 +92,39 @@ export type Database = {
           interests?: string[] | null
           resume_url?: string | null
           skills?: string[] | null
+        }
+        Relationships: []
+      }
+      skill_analysis: {
+        Row: {
+          created_at: string
+          id: string
+          matched_skills: number
+          missing_skills: number
+          readiness_score: number
+          skill_distribution: Json | null
+          total_skills: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          matched_skills?: number
+          missing_skills?: number
+          readiness_score?: number
+          skill_distribution?: Json | null
+          total_skills?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          matched_skills?: number
+          missing_skills?: number
+          readiness_score?: number
+          skill_distribution?: Json | null
+          total_skills?: number
+          user_id?: string
         }
         Relationships: []
       }
