@@ -7,6 +7,9 @@ import ResetPassword from "@/pages/ResetPassword";
 import Dashboard from "@/pages/Dashboard";
 import ProfileSetup from "@/pages/ProfileSetup";
 import Profile from "@/pages/Profile";
+import CareerRecommendations from "@/pages/CareerRecommendations";
+import CareerDetails from "@/pages/CareerDetails";
+import SkillAnalysisPage from "@/pages/SkillAnalysisPage";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
@@ -21,9 +24,10 @@ const AppRoutes = () => (
     <Route path="/profile/setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-    <Route path="/skill-analysis" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
+    <Route path="/career-recommendations" element={<ProtectedRoute><CareerRecommendations /></ProtectedRoute>} />
+    <Route path="/career-details/:id" element={<ProtectedRoute><CareerDetails /></ProtectedRoute>} />
+    <Route path="/skill-analysis" element={<ProtectedRoute><SkillAnalysisPage /></ProtectedRoute>} />
     <Route path="/skill-gap" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
-    <Route path="/career-recommendations" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
     <Route path="/learning-roadmap" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>

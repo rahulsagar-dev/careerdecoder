@@ -39,9 +39,9 @@ const NAV_ITEMS = [
   { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
   { title: "Profile", url: "/profile", icon: User },
   { title: "Profile Setup", url: "/profile/setup", icon: UserCog },
-  { title: "Skill Analysis", url: "/skill-analysis", icon: Brain, comingSoon: true },
+  { title: "Career Recommendations", url: "/career-recommendations", icon: Compass },
+  { title: "Skill Analysis", url: "/skill-analysis", icon: Brain },
   { title: "Skill Gap Analysis", url: "/skill-gap", icon: BarChart3, comingSoon: true },
-  { title: "Career Recommendations", url: "/career-recommendations", icon: Compass, comingSoon: true },
   { title: "Learning Roadmap", url: "/learning-roadmap", icon: BookOpen, comingSoon: true },
 ];
 
