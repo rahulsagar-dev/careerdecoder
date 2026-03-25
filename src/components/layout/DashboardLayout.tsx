@@ -1,6 +1,20 @@
 import { ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, User, Brain, Compass, LogOut } from "lucide-react";
+import {
+  LayoutDashboard,
+  User,
+  Brain,
+  Compass,
+  LogOut,
+  Sparkles,
+  UserCog,
+  BarChart3,
+  BookOpen,
+  Route,
+  Briefcase,
+  FolderKanban,
+  Hash,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import {
@@ -22,10 +36,21 @@ import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 
 const NAV_ITEMS = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
   { title: "Profile", url: "/profile", icon: User },
+  { title: "Profile Setup", url: "/profile/setup", icon: UserCog },
   { title: "Skill Analysis", url: "/skill-analysis", icon: Brain, comingSoon: true },
+  { title: "Skill Gap Analysis", url: "/skill-gap", icon: BarChart3, comingSoon: true },
   { title: "Career Recommendations", url: "/career-recommendations", icon: Compass, comingSoon: true },
+  { title: "Learning Roadmap", url: "/learning-roadmap", icon: BookOpen, comingSoon: true },
+];
+
+const INSIGHT_ITEMS = [
+  { title: "Career Paths", url: "#career-paths", icon: Route },
+  { title: "Skill Gaps", url: "#skill-gaps", icon: BarChart3 },
+  { title: "Learning Roadmap", url: "#learning-roadmap", icon: BookOpen },
+  { title: "Projects", url: "#projects", icon: FolderKanban },
+  { title: "Internships", url: "#internships", icon: Briefcase },
 ];
 
 function SidebarNav() {
@@ -36,27 +61,62 @@ function SidebarNav() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
-        {!collapsed && (
-          <span className="text-lg font-bold bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent">
-            Career Decode
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-[hsl(260,84%,60%)] flex items-center justify-center shrink-0">
+            <Sparkles className="h-4 w-4 text-primary-foreground" />
+          </div>
+          {!collapsed && (
+            <span className="text-base font-bold bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent truncate">
+              Career Decode
+            </span>
+          )}
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70">Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAV_ITEMS.map((item) => (
+              {NAV_ITEMS.map((item) => {
+                const active = location.pathname === item.url;
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={active}>
+                      <NavLink
+                        to={item.url}
+                        className={`relative transition-all duration-200 rounded-lg hover:bg-primary/5 ${active ? "bg-primary/10 text-primary font-medium" : ""}`}
+                        activeClassName="bg-primary/10 text-primary font-medium"
+                      >
+                        {active && (
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full" />
+                        )}
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        {!collapsed && <span>{item.title}</span>}
+                        {!collapsed && item.comingSoon && (
+                          <span className="ml-auto text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full font-medium">Soon</span>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70">
+            {!collapsed ? "Insights" : <Hash className="h-3 w-3" />}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {INSIGHT_ITEMS.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.url}>
-                    <NavLink to={item.url} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
-                      <item.icon className="h-4 w-4" />
+                  <SidebarMenuButton asChild>
+                    <a href={item.url} className="transition-all duration-200 rounded-lg hover:bg-primary/5">
+                      <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span>{item.title}</span>}
-                      {!collapsed && item.comingSoon && (
-                        <span className="ml-auto text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded">Soon</span>
-                      )}
-                    </NavLink>
+                    </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -64,7 +124,7 @@ function SidebarNav() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="p-3">
         <LogoutButton collapsed={collapsed} />
       </SidebarFooter>
     </Sidebar>
@@ -86,24 +146,42 @@ function LogoutButton({ collapsed }: { collapsed: boolean }) {
   };
 
   return (
-    <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={handleLogout}>
-      <LogOut className="h-4 w-4" />
+    <Button
+      variant="ghost"
+      className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+      onClick={handleLogout}
+    >
+      <LogOut className="h-4 w-4 shrink-0" />
       {!collapsed && <span className="ml-2">Logout</span>}
     </Button>
   );
 }
 
-const DashboardLayout = ({ children }: { children: ReactNode }) => {
+interface DashboardLayoutProps {
+  children: ReactNode;
+  userName?: string;
+}
+
+const DashboardLayout = ({ children, userName }: DashboardLayoutProps) => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <SidebarNav />
         <div className="flex-1 flex flex-col">
-          <header className="h-14 flex items-center border-b bg-card px-4">
-            <SidebarTrigger className="mr-4" />
+          <header className="h-14 flex items-center justify-between border-b bg-background/80 backdrop-blur-lg px-4 sticky top-0 z-10">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger />
+            </div>
+            {userName && (
+              <p className="text-sm text-muted-foreground">
+                Welcome back, <span className="font-semibold text-foreground">{userName}</span> 👋
+              </p>
+            )}
           </header>
-          <main className="flex-1 p-6 bg-muted/30">
-            {children}
+          <main className="flex-1 p-4 sm:p-6 bg-muted/30">
+            <div className="max-w-5xl mx-auto space-y-8">
+              {children}
+            </div>
           </main>
         </div>
       </div>
