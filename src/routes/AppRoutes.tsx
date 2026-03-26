@@ -10,6 +10,7 @@ import Profile from "@/pages/Profile";
 import CareerRecommendations from "@/pages/CareerRecommendations";
 import CareerDetails from "@/pages/CareerDetails";
 import SkillAnalysisPage from "@/pages/SkillAnalysisPage";
+import LearningRoadmapPage from "@/pages/LearningRoadmapPage";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
@@ -27,8 +28,8 @@ const AppRoutes = () => (
     <Route path="/career-recommendations" element={<ProtectedRoute><CareerRecommendations /></ProtectedRoute>} />
     <Route path="/career-details/:id" element={<ProtectedRoute><CareerDetails /></ProtectedRoute>} />
     <Route path="/skill-analysis" element={<ProtectedRoute><SkillAnalysisPage /></ProtectedRoute>} />
+    <Route path="/learning-roadmap" element={<ProtectedRoute><LearningRoadmapPage /></ProtectedRoute>} />
     <Route path="/skill-gap" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
-    <Route path="/learning-roadmap" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
