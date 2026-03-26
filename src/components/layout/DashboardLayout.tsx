@@ -42,7 +42,7 @@ const NAV_ITEMS = [
   { title: "Career Recommendations", url: "/career-recommendations", icon: Compass },
   { title: "Skill Analysis", url: "/skill-analysis", icon: Brain },
   { title: "Skill Gap Analysis", url: "/skill-gap", icon: BarChart3, comingSoon: true },
-  { title: "Learning Roadmap", url: "/learning-roadmap", icon: BookOpen, comingSoon: true },
+  { title: "Learning Roadmap", url: "/learning-roadmap", icon: BookOpen },
 ];
 
 const INSIGHT_ITEMS = [
