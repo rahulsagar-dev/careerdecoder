@@ -50,6 +50,36 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_roadmaps: {
+        Row: {
+          career_title: string
+          completed_steps: number
+          created_at: string
+          id: string
+          progress: number
+          total_steps: number
+          user_id: string
+        }
+        Insert: {
+          career_title: string
+          completed_steps?: number
+          created_at?: string
+          id?: string
+          progress?: number
+          total_steps?: number
+          user_id: string
+        }
+        Update: {
+          career_title?: string
+          completed_steps?: number
+          created_at?: string
+          id?: string
+          progress?: number
+          total_steps?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           career_goal: string | null
@@ -94,6 +124,86 @@ export type Database = {
           skills?: string[] | null
         }
         Relationships: []
+      }
+      project_suggestions: {
+        Row: {
+          created_at: string
+          description: string
+          difficulty: string
+          estimated_time: string
+          id: string
+          project_link: string | null
+          skills_covered: string[] | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          difficulty?: string
+          estimated_time?: string
+          id?: string
+          project_link?: string | null
+          skills_covered?: string[] | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          difficulty?: string
+          estimated_time?: string
+          id?: string
+          project_link?: string | null
+          skills_covered?: string[] | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      roadmap_steps: {
+        Row: {
+          created_at: string
+          description: string
+          estimated_time: string
+          id: string
+          resources: string[] | null
+          roadmap_id: string
+          status: string
+          step_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          estimated_time: string
+          id?: string
+          resources?: string[] | null
+          roadmap_id: string
+          status?: string
+          step_order: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          estimated_time?: string
+          id?: string
+          resources?: string[] | null
+          roadmap_id?: string
+          status?: string
+          step_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_steps_roadmap_id_fkey"
+            columns: ["roadmap_id"]
+            isOneToOne: false
+            referencedRelation: "learning_roadmaps"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       skill_analysis: {
         Row: {

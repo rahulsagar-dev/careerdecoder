@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.generate-skill-analysis]
 verify_jwt = false
+
+[functions.generate-learning-roadmap]
+verify_jwt = false
+
+[functions.generate-project-suggestions]
+verify_jwt = false
