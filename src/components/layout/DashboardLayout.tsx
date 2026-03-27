@@ -40,8 +40,7 @@ const NAV_ITEMS = [
   { title: "Profile", url: "/profile", icon: User },
   { title: "Profile Setup", url: "/profile/setup", icon: UserCog },
   { title: "Career Recommendations", url: "/career-recommendations", icon: Compass },
-  { title: "Skill Analysis", url: "/skill-analysis", icon: Brain },
-  { title: "Skill Gap Analysis", url: "/skill-gap", icon: BarChart3, comingSoon: true },
+  { title: "Skill Analysis & Gap", url: "/skill-analysis", icon: Brain },
   { title: "Learning Roadmap", url: "/learning-roadmap", icon: BookOpen },
 ];
 

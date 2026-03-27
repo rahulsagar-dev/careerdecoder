@@ -29,7 +29,7 @@ const AppRoutes = () => (
     <Route path="/career-details/:id" element={<ProtectedRoute><CareerDetails /></ProtectedRoute>} />
     <Route path="/skill-analysis" element={<ProtectedRoute><SkillAnalysisPage /></ProtectedRoute>} />
     <Route path="/learning-roadmap" element={<ProtectedRoute><LearningRoadmapPage /></ProtectedRoute>} />
-    <Route path="/skill-gap" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
+    <Route path="/skill-gap" element={<ProtectedRoute><SkillAnalysisPage /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
