@@ -161,6 +161,48 @@ export type Database = {
         }
         Relationships: []
       }
+      resume_analysis: {
+        Row: {
+          ats_score: number
+          created_at: string
+          extracted_experience: Json | null
+          extracted_projects: Json | null
+          extracted_skills: string[] | null
+          id: string
+          strengths: string[] | null
+          suggestions: string[] | null
+          tech_stack: string[] | null
+          user_id: string
+          weaknesses: string[] | null
+        }
+        Insert: {
+          ats_score?: number
+          created_at?: string
+          extracted_experience?: Json | null
+          extracted_projects?: Json | null
+          extracted_skills?: string[] | null
+          id?: string
+          strengths?: string[] | null
+          suggestions?: string[] | null
+          tech_stack?: string[] | null
+          user_id: string
+          weaknesses?: string[] | null
+        }
+        Update: {
+          ats_score?: number
+          created_at?: string
+          extracted_experience?: Json | null
+          extracted_projects?: Json | null
+          extracted_skills?: string[] | null
+          id?: string
+          strengths?: string[] | null
+          suggestions?: string[] | null
+          tech_stack?: string[] | null
+          user_id?: string
+          weaknesses?: string[] | null
+        }
+        Relationships: []
+      }
       roadmap_steps: {
         Row: {
           created_at: string
