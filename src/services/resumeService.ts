@@ -81,7 +81,7 @@ export const resumeService = {
       .maybeSingle();
 
     if (error) return null;
-    return data as ResumeAnalysis | null;
+    return data as unknown as ResumeAnalysis | null;
   },
 
   async updateProfileSkillsFromResume(newSkills: string[]): Promise<void> {

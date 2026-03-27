@@ -42,6 +42,7 @@ const NAV_ITEMS = [
   { title: "Career Recommendations", url: "/career-recommendations", icon: Compass },
   { title: "Skill Analysis & Gap", url: "/skill-analysis", icon: Brain },
   { title: "Learning Roadmap", url: "/learning-roadmap", icon: BookOpen },
+  { title: "Resume Analysis", url: "/resume-analysis", icon: BarChart3 },
 ];
 
 const INSIGHT_ITEMS = [

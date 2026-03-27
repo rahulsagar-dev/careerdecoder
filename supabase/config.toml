@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.generate-project-suggestions]
 verify_jwt = false
+
+[functions.parse-resume]
+verify_jwt = false
+
+[functions.score-resume]
+verify_jwt = false
