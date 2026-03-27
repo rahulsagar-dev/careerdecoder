@@ -91,9 +91,6 @@ function SidebarNav() {
                         )}
                         <item.icon className="h-4 w-4 shrink-0" />
                         {!collapsed && <span>{item.title}</span>}
-                        {!collapsed && item.comingSoon && (
-                          <span className="ml-auto text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full font-medium">Soon</span>
-                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
