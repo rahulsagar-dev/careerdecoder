@@ -265,7 +265,7 @@ const Dashboard = () => {
         <CardHeader className="flex flex-row items-center justify-between pb-4">
           <div className="flex items-center gap-3">
             <div className={`${iconContainer} bg-accent`}><BarChart3 className="h-5 w-5 text-primary" /></div>
-            <CardTitle className="text-lg font-semibold">Skill Gap Analysis</CardTitle>
+            <CardTitle className="text-lg font-semibold">Skill Analysis & Gap</CardTitle>
           </div>
           {skillAnalysis && (
             <Button variant="ghost" size="sm" onClick={() => navigate("/skill-analysis")} className="text-primary gap-1">

@@ -40,8 +40,7 @@ const NAV_ITEMS = [
   { title: "Profile", url: "/profile", icon: User },
   { title: "Profile Setup", url: "/profile/setup", icon: UserCog },
   { title: "Career Recommendations", url: "/career-recommendations", icon: Compass },
-  { title: "Skill Analysis", url: "/skill-analysis", icon: Brain },
-  { title: "Skill Gap Analysis", url: "/skill-gap", icon: BarChart3, comingSoon: true },
+  { title: "Skill Analysis & Gap", url: "/skill-analysis", icon: Brain },
   { title: "Learning Roadmap", url: "/learning-roadmap", icon: BookOpen },
 ];
 
@@ -92,9 +91,6 @@ function SidebarNav() {
                         )}
                         <item.icon className="h-4 w-4 shrink-0" />
                         {!collapsed && <span>{item.title}</span>}
-                        {!collapsed && item.comingSoon && (
-                          <span className="ml-auto text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full font-medium">Soon</span>
-                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
