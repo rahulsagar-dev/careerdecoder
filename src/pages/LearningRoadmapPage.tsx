@@ -88,6 +88,27 @@ const LearningRoadmapPage = () => {
     }
   };
 
+  const handleProjectSelect = async (project: ProjectSuggestion) => {
+    try {
+      setGeneratingForProject(project.id);
+      setGenerating(true);
+      const result = await roadmapService.generateRoadmap(
+        project.title,
+        project.skills_covered || []
+      );
+      setRoadmap(result.roadmap);
+      setSteps(result.steps);
+      toast.success(`Roadmap generated for "${project.title}"!`);
+      // Scroll to top to see the roadmap
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate roadmap");
+    } finally {
+      setGenerating(false);
+      setGeneratingForProject(null);
+    }
+  };
+
   const handleStepToggle = async (step: RoadmapStep) => {
     if (!roadmap) return;
     try {
