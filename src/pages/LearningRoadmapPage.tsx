@@ -26,6 +26,7 @@ const LearningRoadmapPage = () => {
   const [generating, setGenerating] = useState(false);
   const [generatingProjects, setGeneratingProjects] = useState(false);
   const [updatingStep, setUpdatingStep] = useState<string | null>(null);
+  const [generatingForProject, setGeneratingForProject] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -84,6 +85,27 @@ const LearningRoadmapPage = () => {
       toast.error(e.message || "Failed to generate projects");
     } finally {
       setGeneratingProjects(false);
+    }
+  };
+
+  const handleProjectSelect = async (project: ProjectSuggestion) => {
+    try {
+      setGeneratingForProject(project.id);
+      setGenerating(true);
+      const result = await roadmapService.generateRoadmap(
+        project.title,
+        project.skills_covered || []
+      );
+      setRoadmap(result.roadmap);
+      setSteps(result.steps);
+      toast.success(`Roadmap generated for "${project.title}"!`);
+      // Scroll to top to see the roadmap
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate roadmap");
+    } finally {
+      setGenerating(false);
+      setGeneratingForProject(null);
     }
   };
 
@@ -317,7 +339,11 @@ const LearningRoadmapPage = () => {
           {projects.length > 0 && (
             <div className="grid gap-4 md:grid-cols-2">
               {projects.map((p) => (
-                <Card key={p.id} className="rounded-2xl shadow-sm hover:shadow-md transition-all hover:scale-[1.01]">
+                <Card
+                  key={p.id}
+                  className="rounded-2xl shadow-sm hover:shadow-md transition-all hover:scale-[1.01] cursor-pointer ring-primary/20 hover:ring-2"
+                  onClick={() => handleProjectSelect(p)}
+                >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
                       <CardTitle className="text-base">{p.title}</CardTitle>
@@ -333,9 +359,22 @@ const LearningRoadmapPage = () => {
                         <Badge key={i} variant="outline" className="text-[10px]">{s}</Badge>
                       ))}
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Timer className="h-3 w-3" />
-                      {p.estimated_time}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Timer className="h-3 w-3" />
+                        {p.estimated_time}
+                      </div>
+                      {generatingForProject === p.id ? (
+                        <div className="flex items-center gap-1 text-xs text-primary">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Generating...
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                          <ArrowRight className="h-3 w-3" />
+                          Build Roadmap
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
