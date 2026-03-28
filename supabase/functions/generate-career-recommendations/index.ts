@@ -8,42 +8,17 @@ const corsHeaders = {
 
 // ── Synonym map for fuzzy matching ──
 const SYNONYMS: Record<string, string> = {
-  js: "javascript",
-  ts: "typescript",
-  ml: "machine learning",
-  ai: "artificial intelligence",
-  "react.js": "react",
-  reactjs: "react",
-  "node.js": "nodejs",
-  node: "nodejs",
-  "next.js": "nextjs",
-  "vue.js": "vue",
-  vuejs: "vue",
-  "express.js": "express",
-  expressjs: "express",
-  "angular.js": "angular",
-  angularjs: "angular",
-  py: "python",
-  cpp: "c++",
-  "c sharp": "c#",
-  csharp: "c#",
-  postgres: "postgresql",
-  mongo: "mongodb",
-  k8s: "kubernetes",
-  aws: "amazon web services",
-  gcp: "google cloud platform",
-  dl: "deep learning",
-  nlp: "natural language processing",
-  cv: "computer vision",
-  oop: "object oriented programming",
-  ci: "continuous integration",
-  cd: "continuous deployment",
-  "ci/cd": "continuous integration",
-  dsa: "data structures",
-  ds: "data structures",
-  html5: "html",
-  css3: "css",
-  scss: "sass",
+  js: "javascript", ts: "typescript", ml: "machine learning",
+  ai: "artificial intelligence", "react.js": "react", reactjs: "react",
+  "node.js": "nodejs", node: "nodejs", "next.js": "nextjs",
+  "vue.js": "vue", vuejs: "vue", "express.js": "express", expressjs: "express",
+  "angular.js": "angular", angularjs: "angular", py: "python", cpp: "c++",
+  "c sharp": "c#", csharp: "c#", postgres: "postgresql", mongo: "mongodb",
+  k8s: "kubernetes", aws: "amazon web services", gcp: "google cloud platform",
+  dl: "deep learning", nlp: "natural language processing", cv: "computer vision",
+  oop: "object oriented programming", ci: "continuous integration",
+  cd: "continuous deployment", "ci/cd": "continuous integration",
+  dsa: "data structures", ds: "data structures", html5: "html", css3: "css", scss: "sass",
 };
 
 function normalize(skill: string): string {
@@ -51,12 +26,10 @@ function normalize(skill: string): string {
   return SYNONYMS[s] || s;
 }
 
-/** Returns 1 (exact), 0.7 (synonym/related), 0.5 (partial), 0 (none) */
+/** Returns 1 (exact), 0.5 (partial), 0 (none) */
 function getSkillMatch(userSkillsNorm: string[], requiredSkillRaw: string): number {
   const req = normalize(requiredSkillRaw);
-  // Exact match (after normalization)
   if (userSkillsNorm.includes(req)) return 1;
-  // Partial / substring match (e.g. "react" matches "react native")
   for (const us of userSkillsNorm) {
     if (us.includes(req) || req.includes(us)) return 0.5;
   }
@@ -67,7 +40,7 @@ function mapDifficulty(level: string): number {
   switch ((level || "").toLowerCase()) {
     case "advanced": return 3;
     case "intermediate": return 2;
-    default: return 1; // beginner
+    default: return 1;
   }
 }
 
@@ -75,14 +48,14 @@ function mapCategory(cat: string): number {
   switch ((cat || "").toLowerCase()) {
     case "core": return 3;
     case "secondary": return 2;
-    default: return 1; // optional
+    default: return 1;
   }
 }
 
 interface StructuredSkill {
   name: string;
-  category: string;       // core | secondary | optional
-  difficulty: string;      // beginner | intermediate | advanced
+  category: string;
+  difficulty: string;
   is_critical: boolean;
 }
 
@@ -91,6 +64,15 @@ interface LLMCareer {
   description: string;
   salary_range: string;
   required_skills: StructuredSkill[];
+}
+
+interface SkillGapDetail {
+  name: string;
+  gap_score: number;
+  priority: string;
+  impact_weight: number;
+  category: string;
+  difficulty: string;
 }
 
 function computeScore(userSkills: string[], career: LLMCareer) {
@@ -102,6 +84,7 @@ function computeScore(userSkills: string[], career: LLMCareer) {
   let penalty = 0;
   const matchedSkills: string[] = [];
   const missingSkills: string[] = [];
+  const skillGapDetails: SkillGapDetail[] = [];
 
   for (const skill of career.required_skills) {
     const dw = mapDifficulty(skill.difficulty);
@@ -109,9 +92,31 @@ function computeScore(userSkills: string[], career: LLMCareer) {
     totalWeight += dw;
     categoryTotal += cw;
 
-    const score = getSkillMatch(userNorm, skill.name);
-    if (score > 0) {
-      matchedWeight += dw * score;
+    const matchScore = getSkillMatch(userNorm, skill.name);
+
+    // Gap score
+    let gapScore: number;
+    if (matchScore === 1) gapScore = 0;
+    else if (matchScore >= 0.5) gapScore = 0.5;
+    else gapScore = 1;
+
+    const impact = gapScore * dw * cw;
+    let priority: string;
+    if (impact >= 2.5) priority = "critical";
+    else if (impact >= 1.2) priority = "important";
+    else priority = "optional";
+
+    skillGapDetails.push({
+      name: skill.name,
+      gap_score: gapScore,
+      priority,
+      impact_weight: Math.round(impact * 100) / 100,
+      category: skill.category,
+      difficulty: skill.difficulty,
+    });
+
+    if (matchScore > 0) {
+      matchedWeight += dw * matchScore;
       categoryMatched += cw;
       matchedSkills.push(skill.name);
     } else {
@@ -127,7 +132,7 @@ function computeScore(userSkills: string[], career: LLMCareer) {
   const raw = (0.5 * skillMatch) + (0.2 * skillMatch) + (0.2 * categoryWeight) - (0.1 * criticalPenalty);
   const finalScore = Math.min(100, Math.max(0, Math.round(raw)));
 
-  return { finalScore, matchedSkills, missingSkills };
+  return { finalScore, matchedSkills, missingSkills, skillGapDetails };
 }
 
 serve(async (req) => {
@@ -153,10 +158,7 @@ serve(async (req) => {
     const userId = claimsData.claims.sub;
 
     const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
+      .from("profiles").select("*").eq("id", userId).single();
 
     if (profileError || !profile) {
       return new Response(JSON.stringify({ error: "Profile not found. Please complete your profile first." }), {
@@ -204,49 +206,47 @@ Be specific and realistic. Return your response by calling the provided function
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "suggest_careers",
-              description: "Return 5-7 career recommendations with structured skill data",
-              parameters: {
-                type: "object",
-                properties: {
-                  careers: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        career_title: { type: "string" },
-                        description: { type: "string" },
-                        salary_range: { type: "string" },
-                        required_skills: {
-                          type: "array",
-                          items: {
-                            type: "object",
-                            properties: {
-                              name: { type: "string" },
-                              category: { type: "string", enum: ["core", "secondary", "optional"] },
-                              difficulty: { type: "string", enum: ["beginner", "intermediate", "advanced"] },
-                              is_critical: { type: "boolean" },
-                            },
-                            required: ["name", "category", "difficulty", "is_critical"],
-                            additionalProperties: false,
+        tools: [{
+          type: "function",
+          function: {
+            name: "suggest_careers",
+            description: "Return 5-7 career recommendations with structured skill data",
+            parameters: {
+              type: "object",
+              properties: {
+                careers: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      career_title: { type: "string" },
+                      description: { type: "string" },
+                      salary_range: { type: "string" },
+                      required_skills: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            name: { type: "string" },
+                            category: { type: "string", enum: ["core", "secondary", "optional"] },
+                            difficulty: { type: "string", enum: ["beginner", "intermediate", "advanced"] },
+                            is_critical: { type: "boolean" },
                           },
+                          required: ["name", "category", "difficulty", "is_critical"],
+                          additionalProperties: false,
                         },
                       },
-                      required: ["career_title", "description", "salary_range", "required_skills"],
-                      additionalProperties: false,
                     },
+                    required: ["career_title", "description", "salary_range", "required_skills"],
+                    additionalProperties: false,
                   },
                 },
-                required: ["careers"],
-                additionalProperties: false,
               },
+              required: ["careers"],
+              additionalProperties: false,
             },
           },
-        ],
+        }],
         tool_choice: { type: "function", function: { name: "suggest_careers" } },
       }),
     });
@@ -282,7 +282,7 @@ Be specific and realistic. Return your response by calling the provided function
     const careers: LLMCareer[] = parsed.careers;
     const userSkills: string[] = profile.skills || [];
 
-    // ── Compute scores server-side ──
+    // ── Compute scores & gap details server-side ──
     const rows = careers.map((c) => {
       const { finalScore, matchedSkills, missingSkills } = computeScore(userSkills, c);
       return {
@@ -296,15 +296,12 @@ Be specific and realistic. Return your response by calling the provided function
       };
     });
 
-    // Sort by score descending
     rows.sort((a, b) => b.match_score - a.match_score);
 
     await supabase.from("career_recommendations").delete().eq("user_id", userId);
 
     const { data: inserted, error: insertError } = await supabase
-      .from("career_recommendations")
-      .insert(rows)
-      .select();
+      .from("career_recommendations").insert(rows).select();
 
     if (insertError) {
       console.error("Insert error:", insertError);
@@ -313,7 +310,19 @@ Be specific and realistic. Return your response by calling the provided function
       });
     }
 
-    return new Response(JSON.stringify({ recommendations: inserted }), {
+    // Build extended response with skill_gap_details per career
+    const extendedRecommendations = (inserted || []).map((rec: any, i: number) => {
+      const career = careers[i];
+      if (!career) return rec;
+      const { matchedSkills, skillGapDetails } = computeScore(userSkills, career);
+      return {
+        ...rec,
+        matched_skills: matchedSkills,
+        skill_gap_details: skillGapDetails,
+      };
+    });
+
+    return new Response(JSON.stringify({ recommendations: extendedRecommendations }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
