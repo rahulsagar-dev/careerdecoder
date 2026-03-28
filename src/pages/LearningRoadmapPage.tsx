@@ -26,6 +26,7 @@ const LearningRoadmapPage = () => {
   const [generating, setGenerating] = useState(false);
   const [generatingProjects, setGeneratingProjects] = useState(false);
   const [updatingStep, setUpdatingStep] = useState<string | null>(null);
+  const [generatingForProject, setGeneratingForProject] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     try {
