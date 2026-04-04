@@ -50,6 +50,45 @@ export type Database = {
         }
         Relationships: []
       }
+      github_analysis: {
+        Row: {
+          created_at: string
+          github_url: string
+          id: string
+          languages: string[] | null
+          portfolio_score: number
+          strengths: string[] | null
+          total_commits: number
+          total_repos: number
+          user_id: string
+          weaknesses: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          github_url: string
+          id?: string
+          languages?: string[] | null
+          portfolio_score?: number
+          strengths?: string[] | null
+          total_commits?: number
+          total_repos?: number
+          user_id: string
+          weaknesses?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          github_url?: string
+          id?: string
+          languages?: string[] | null
+          portfolio_score?: number
+          strengths?: string[] | null
+          total_commits?: number
+          total_repos?: number
+          user_id?: string
+          weaknesses?: string[] | null
+        }
+        Relationships: []
+      }
       learning_roadmaps: {
         Row: {
           career_title: string
@@ -160,6 +199,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      repo_analysis: {
+        Row: {
+          analysis_id: string
+          commit_count: number
+          complexity_score: number
+          created_at: string
+          description: string | null
+          forks: number
+          id: string
+          primary_language: string | null
+          repo_name: string
+          stars: number
+          strengths: string[] | null
+          weaknesses: string[] | null
+        }
+        Insert: {
+          analysis_id: string
+          commit_count?: number
+          complexity_score?: number
+          created_at?: string
+          description?: string | null
+          forks?: number
+          id?: string
+          primary_language?: string | null
+          repo_name: string
+          stars?: number
+          strengths?: string[] | null
+          weaknesses?: string[] | null
+        }
+        Update: {
+          analysis_id?: string
+          commit_count?: number
+          complexity_score?: number
+          created_at?: string
+          description?: string | null
+          forks?: number
+          id?: string
+          primary_language?: string | null
+          repo_name?: string
+          stars?: number
+          strengths?: string[] | null
+          weaknesses?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repo_analysis_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "github_analysis"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       resume_analysis: {
         Row: {

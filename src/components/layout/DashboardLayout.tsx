@@ -14,6 +14,7 @@ import {
   Briefcase,
   FolderKanban,
   Hash,
+  Github,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
@@ -43,6 +44,7 @@ const NAV_ITEMS = [
   { title: "Skill Analysis & Gap", url: "/skill-analysis", icon: Brain },
   { title: "Learning Roadmap", url: "/learning-roadmap", icon: BookOpen },
   { title: "Resume Analysis", url: "/resume-analysis", icon: BarChart3 },
+  { title: "GitHub Analysis", url: "/github-analysis", icon: Github },
 ];
 
 const INSIGHT_ITEMS = [
