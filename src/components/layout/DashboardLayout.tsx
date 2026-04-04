@@ -14,6 +14,7 @@ import {
   Briefcase,
   FolderKanban,
   Hash,
+  Github,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
