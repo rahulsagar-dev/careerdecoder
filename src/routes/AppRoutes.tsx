@@ -32,6 +32,7 @@ const AppRoutes = () => (
     <Route path="/skill-gap" element={<ProtectedRoute><SkillAnalysisPage /></ProtectedRoute>} />
     <Route path="/learning-roadmap" element={<ProtectedRoute><LearningRoadmapPage /></ProtectedRoute>} />
     <Route path="/resume-analysis" element={<ProtectedRoute><ResumeAnalysisPage /></ProtectedRoute>} />
+    <Route path="/github-analysis" element={<ProtectedRoute><GitHubAnalysisPage /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
