@@ -12,6 +12,7 @@ import CareerDetails from "@/pages/CareerDetails";
 import SkillAnalysisPage from "@/pages/SkillAnalysisPage";
 import LearningRoadmapPage from "@/pages/LearningRoadmapPage";
 import ResumeAnalysisPage from "@/pages/ResumeAnalysisPage";
+import GitHubAnalysisPage from "@/pages/GitHubAnalysisPage";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 
