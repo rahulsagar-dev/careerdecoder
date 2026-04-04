@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.score-resume]
 verify_jwt = false
+
+[functions.analyze-github-profile]
+verify_jwt = false
