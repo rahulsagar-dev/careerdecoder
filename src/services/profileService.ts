@@ -70,10 +70,7 @@ export const profileService = {
 
     if (uploadError) throw uploadError;
 
-    const { data: urlData } = supabase.storage
-      .from("resumes")
-      .getPublicUrl(filePath);
-
-    return urlData.publicUrl;
+    // Store the file path (not a public URL) since the bucket is private
+    return filePath;
   },
 };
