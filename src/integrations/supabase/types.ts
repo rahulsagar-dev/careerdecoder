@@ -89,6 +89,68 @@ export type Database = {
         }
         Relationships: []
       }
+      interview_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          sender: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string
+          sender?: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          sender?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "interview_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_sessions: {
+        Row: {
+          created_at: string
+          feedback: Json | null
+          id: string
+          mode: string
+          role: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback?: Json | null
+          id?: string
+          mode?: string
+          role?: string
+          score?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback?: Json | null
+          id?: string
+          mode?: string
+          role?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       learning_roadmaps: {
         Row: {
           career_title: string
@@ -115,6 +177,39 @@ export type Database = {
           id?: string
           progress?: number
           total_steps?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      market_data: {
+        Row: {
+          created_at: string
+          demand_level: string | null
+          id: string
+          insights: string | null
+          role: string
+          salary_range: string | null
+          trending_skills: string[] | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          demand_level?: string | null
+          id?: string
+          insights?: string | null
+          role?: string
+          salary_range?: string | null
+          trending_skills?: string[] | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          demand_level?: string | null
+          id?: string
+          insights?: string | null
+          role?: string
+          salary_range?: string | null
+          trending_skills?: string[] | null
           user_id?: string
         }
         Relationships: []
