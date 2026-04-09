@@ -15,6 +15,11 @@ import {
   FolderKanban,
   Hash,
   Github,
+  MessageSquare,
+  TrendingUp,
+  GitBranch,
+  FileText,
+  LineChart,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
@@ -45,6 +50,11 @@ const NAV_ITEMS = [
   { title: "Learning Roadmap", url: "/learning-roadmap", icon: BookOpen },
   { title: "Resume Analysis", url: "/resume-analysis", icon: BarChart3 },
   { title: "GitHub Analysis", url: "/github-analysis", icon: Github },
+  { title: "Interview Simulator", url: "/interview-simulator", icon: MessageSquare },
+  { title: "Market Intelligence", url: "/market-intelligence", icon: TrendingUp },
+  { title: "Career Path Graph", url: "/career-path", icon: GitBranch },
+  { title: "Career Report", url: "/career-report", icon: FileText },
+  { title: "Analytics", url: "/analytics", icon: LineChart },
 ];
 
 const INSIGHT_ITEMS = [
