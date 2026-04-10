@@ -56,16 +56,14 @@ const InterviewSimulatorPage = () => {
       setResult(null);
       setDifficulty("easy");
       setQuestionNum(0);
-      const aiMsg = await interviewService.sendMessage(session.id, "Hello, I'm ready for the interview.", mode, role);
+      const aiResponse = await interviewService.sendMessage(session.id, "Hello, I'm ready for the interview.", mode, role);
       setMessages([
         { sender: "user", message: "Hello, I'm ready for the interview." },
-        { sender: "ai", message: typeof aiMsg === "string" ? aiMsg : aiMsg.message },
+        { sender: "ai", message: aiResponse.message },
       ]);
-      if (typeof aiMsg !== "string") {
-        setDifficulty(aiMsg.difficulty_level || "easy");
-        setQuestionNum(aiMsg.question_number || 1);
-        setCurrentTopic(aiMsg.topic || "");
-      }
+      setDifficulty(aiResponse.difficulty_level);
+      setQuestionNum(aiResponse.question_number);
+      setCurrentTopic(aiResponse.topic);
       toast.success("Interview started!");
     } catch (e: any) {
       toast.error(e.message || "Failed to start interview");
@@ -81,14 +79,11 @@ const InterviewSimulatorPage = () => {
     setMessages((prev) => [...prev, { sender: "user", message: userMsg }]);
     setSending(true);
     try {
-      const aiMsg = await interviewService.sendMessage(sessionId, userMsg, mode, role);
-      const msgText = typeof aiMsg === "string" ? aiMsg : aiMsg.message;
-      setMessages((prev) => [...prev, { sender: "ai", message: msgText }]);
-      if (typeof aiMsg !== "string") {
-        setDifficulty(aiMsg.difficulty_level || difficulty);
-        setQuestionNum(aiMsg.question_number || questionNum + 1);
-        setCurrentTopic(aiMsg.topic || currentTopic);
-      }
+      const aiResponse = await interviewService.sendMessage(sessionId, userMsg, mode, role);
+      setMessages((prev) => [...prev, { sender: "ai", message: aiResponse.message }]);
+      setDifficulty(aiResponse.difficulty_level);
+      setQuestionNum(aiResponse.question_number);
+      setCurrentTopic(aiResponse.topic);
     } catch (e: any) {
       toast.error(e.message || "Failed to get response");
     } finally {
