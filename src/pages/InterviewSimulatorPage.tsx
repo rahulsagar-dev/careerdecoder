@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { interviewService, InterviewMessage } from "@/services/interviewService";
+import { interviewService, InterviewChatResponse } from "@/services/interviewService";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
 import {
-  Loader2, MessageSquare, Send, CheckCircle2, Brain, Users, Briefcase, Trophy, AlertTriangle, Target, Lightbulb,
+  Loader2, MessageSquare, Send, CheckCircle2, Brain, Users, Briefcase, Trophy,
+  AlertTriangle, Lightbulb, XCircle, ClipboardList, ArrowUp, ArrowDown, Minus,
 } from "lucide-react";
 
 const MODES = [
@@ -18,6 +18,12 @@ const MODES = [
   { value: "Technical", label: "Technical Interview", icon: Brain, description: "Deep concept questions" },
   { value: "Behavioral", label: "Behavioral Interview", icon: Briefcase, description: "Scenario-based" },
 ];
+
+const difficultyColors: Record<string, string> = {
+  easy: "bg-green-500/10 text-green-700 border-green-500/20",
+  medium: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
+  hard: "bg-red-500/10 text-red-700 border-red-500/20",
+};
 
 const InterviewSimulatorPage = () => {
   const [mode, setMode] = useState("Technical");
@@ -29,6 +35,9 @@ const InterviewSimulatorPage = () => {
   const [starting, setStarting] = useState(false);
   const [evaluating, setEvaluating] = useState(false);
   const [result, setResult] = useState<{ score: number; feedback: any } | null>(null);
+  const [difficulty, setDifficulty] = useState("easy");
+  const [questionNum, setQuestionNum] = useState(0);
+  const [currentTopic, setCurrentTopic] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,12 +54,16 @@ const InterviewSimulatorPage = () => {
       setSessionId(session.id);
       setMessages([]);
       setResult(null);
-      // Get first AI question
-      const aiMsg = await interviewService.sendMessage(session.id, "Hello, I'm ready for the interview.", mode, role);
+      setDifficulty("easy");
+      setQuestionNum(0);
+      const aiResponse = await interviewService.sendMessage(session.id, "Hello, I'm ready for the interview.", mode, role);
       setMessages([
         { sender: "user", message: "Hello, I'm ready for the interview." },
-        { sender: "ai", message: aiMsg },
+        { sender: "ai", message: aiResponse.message },
       ]);
+      setDifficulty(aiResponse.difficulty_level);
+      setQuestionNum(aiResponse.question_number);
+      setCurrentTopic(aiResponse.topic);
       toast.success("Interview started!");
     } catch (e: any) {
       toast.error(e.message || "Failed to start interview");
@@ -66,8 +79,11 @@ const InterviewSimulatorPage = () => {
     setMessages((prev) => [...prev, { sender: "user", message: userMsg }]);
     setSending(true);
     try {
-      const aiMsg = await interviewService.sendMessage(sessionId, userMsg, mode, role);
-      setMessages((prev) => [...prev, { sender: "ai", message: aiMsg }]);
+      const aiResponse = await interviewService.sendMessage(sessionId, userMsg, mode, role);
+      setMessages((prev) => [...prev, { sender: "ai", message: aiResponse.message }]);
+      setDifficulty(aiResponse.difficulty_level);
+      setQuestionNum(aiResponse.question_number);
+      setCurrentTopic(aiResponse.topic);
     } catch (e: any) {
       toast.error(e.message || "Failed to get response");
     } finally {
@@ -94,13 +110,24 @@ const InterviewSimulatorPage = () => {
     setMessages([]);
     setResult(null);
     setInput("");
+    setDifficulty("easy");
+    setQuestionNum(0);
+    setCurrentTopic("");
   };
+
+  const feedbackMetrics = result ? [
+    { label: "Clarity", value: result.feedback.clarity, weight: "25%", icon: CheckCircle2 },
+    { label: "Technical Depth", value: result.feedback.technical_depth, weight: "25%", icon: Brain },
+    { label: "Problem Solving", value: result.feedback.problem_solving, weight: "20%", icon: Lightbulb },
+    { label: "Communication", value: result.feedback.communication, weight: "15%", icon: MessageSquare },
+    { label: "Confidence", value: result.feedback.confidence, weight: "15%", icon: Trophy },
+  ] : [];
 
   return (
     <DashboardLayout>
       <div>
         <h1 className="text-3xl font-bold text-foreground">AI Interview Simulator</h1>
-        <p className="text-muted-foreground mt-1">Practice interviews with AI-powered feedback</p>
+        <p className="text-muted-foreground mt-1">Practice interviews with adaptive AI feedback</p>
       </div>
 
       {!sessionId ? (
@@ -137,6 +164,7 @@ const InterviewSimulatorPage = () => {
         </Card>
       ) : result ? (
         <div className="space-y-6">
+          {/* Score */}
           <Card className="rounded-2xl shadow-sm border">
             <CardHeader className="flex flex-row items-center gap-3">
               <Trophy className="h-6 w-6 text-primary" />
@@ -147,22 +175,22 @@ const InterviewSimulatorPage = () => {
                 <p className="text-5xl font-bold text-primary">{result.score}</p>
                 <p className="text-sm text-muted-foreground mt-1">Overall Score</p>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { label: "Clarity", value: result.feedback.clarity, weight: "40%" },
-                  { label: "Depth", value: result.feedback.depth, weight: "30%" },
-                  { label: "Relevance", value: result.feedback.relevance, weight: "20%" },
-                  { label: "Confidence", value: result.feedback.confidence, weight: "10%" },
-                ].map((metric) => (
+
+              {/* 5-dimension breakdown */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {feedbackMetrics.map((metric) => (
                   <div key={metric.label} className="p-3 rounded-xl bg-muted/50 text-center">
+                    <metric.icon className="h-4 w-4 text-primary mx-auto mb-1" />
                     <p className="text-2xl font-bold text-foreground">{metric.value}</p>
-                    <p className="text-xs text-muted-foreground">{metric.label} ({metric.weight})</p>
+                    <p className="text-xs text-muted-foreground">{metric.label}</p>
+                    <p className="text-[10px] text-muted-foreground/60">({metric.weight})</p>
                     <Progress value={metric.value} className="h-1.5 mt-2" />
                   </div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Strengths & Weaknesses */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl border">
                   <div className="flex items-center gap-2 mb-3">
                     <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -185,18 +213,42 @@ const InterviewSimulatorPage = () => {
                     ))}
                   </ul>
                 </div>
-                <div className="p-4 rounded-xl border">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Lightbulb className="h-4 w-4 text-primary" />
-                    <p className="font-semibold text-sm">Improvements</p>
-                  </div>
-                  <ul className="space-y-1.5">
-                    {(result.feedback.improvement_areas || []).map((s: string, i: number) => (
-                      <li key={i} className="text-xs text-muted-foreground">• {s}</li>
-                    ))}
-                  </ul>
-                </div>
               </div>
+
+              {/* Missed Concepts */}
+              {result.feedback.missed_concepts?.length > 0 && (
+                <div className="p-4 rounded-xl border border-destructive/20 bg-destructive/5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <XCircle className="h-4 w-4 text-destructive" />
+                    <p className="font-semibold text-sm">Missed Concepts</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {result.feedback.missed_concepts.map((c: string, i: number) => (
+                      <Badge key={i} variant="outline" className="text-xs border-destructive/30 text-destructive">
+                        {c}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Improvement Plan */}
+              {result.feedback.improvement_plan?.length > 0 && (
+                <div className="p-4 rounded-xl border border-primary/20 bg-primary/5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <ClipboardList className="h-4 w-4 text-primary" />
+                    <p className="font-semibold text-sm">Improvement Plan</p>
+                  </div>
+                  <ol className="space-y-2">
+                    {result.feedback.improvement_plan.map((step: string, i: number) => (
+                      <li key={i} className="text-xs text-muted-foreground flex gap-2">
+                        <span className="font-bold text-primary min-w-[20px]">{i + 1}.</span>
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
 
               <Button onClick={resetInterview} className="w-full" variant="outline">Start New Interview</Button>
             </CardContent>
@@ -212,14 +264,29 @@ const InterviewSimulatorPage = () => {
                 <p className="text-xs text-muted-foreground">Role: {role}</p>
               </div>
             </div>
-            <Button
-              onClick={finishInterview}
-              disabled={evaluating || messages.filter((m) => m.sender === "user").length < 2}
-              size="sm"
-              className="bg-gradient-to-r from-primary to-[hsl(260,84%,60%)]"
-            >
-              {evaluating ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Evaluating...</> : "Finish Interview"}
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* Live indicators */}
+              <Badge variant="outline" className={`text-[10px] ${difficultyColors[difficulty] || ""}`}>
+                {difficulty === "easy" ? <ArrowDown className="h-3 w-3 mr-1" /> :
+                 difficulty === "hard" ? <ArrowUp className="h-3 w-3 mr-1" /> :
+                 <Minus className="h-3 w-3 mr-1" />}
+                {difficulty}
+              </Badge>
+              <Badge variant="outline" className="text-[10px]">Q{questionNum}</Badge>
+              {currentTopic && (
+                <Badge variant="secondary" className="text-[10px] max-w-[120px] truncate">
+                  {currentTopic}
+                </Badge>
+              )}
+              <Button
+                onClick={finishInterview}
+                disabled={evaluating || messages.filter((m) => m.sender === "user").length < 3}
+                size="sm"
+                className="bg-gradient-to-r from-primary to-[hsl(260,84%,60%)]"
+              >
+                {evaluating ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Evaluating...</> : "Finish Interview"}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <div ref={scrollRef} className="h-[400px] overflow-y-auto p-4 space-y-4">
@@ -232,7 +299,13 @@ const InterviewSimulatorPage = () => {
                         : "bg-muted rounded-bl-md"
                     }`}
                   >
-                    {msg.message}
+                    {msg.sender === "ai" ? (
+                      <div className="prose prose-sm dark:prose-invert max-w-none">
+                        <ReactMarkdown>{msg.message}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      msg.message
+                    )}
                   </div>
                 </div>
               ))}

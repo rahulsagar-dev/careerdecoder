@@ -18,6 +18,14 @@ export interface InterviewMessage {
   created_at: string;
 }
 
+export interface InterviewChatResponse {
+  message: string;
+  difficulty_level: string;
+  topic: string;
+  is_follow_up: boolean;
+  question_number: number;
+}
+
 export const interviewService = {
   async createSession(mode: string, role: string): Promise<InterviewSession> {
     const { data: { session } } = await supabase.auth.getSession();
@@ -33,7 +41,7 @@ export const interviewService = {
     return data as InterviewSession;
   },
 
-  async sendMessage(sessionId: string, userMessage: string, mode: string, role: string): Promise<string> {
+  async sendMessage(sessionId: string, userMessage: string, mode: string, role: string): Promise<InterviewChatResponse> {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error("Not authenticated");
 
@@ -44,7 +52,13 @@ export const interviewService = {
 
     if (error) throw new Error(error.message || "Failed to send message");
     if (data?.error) throw new Error(data.error);
-    return data.message;
+    return {
+      message: data.message,
+      difficulty_level: data.difficulty_level || "easy",
+      topic: data.topic || "",
+      is_follow_up: data.is_follow_up || false,
+      question_number: data.question_number || 0,
+    };
   },
 
   async evaluateInterview(sessionId: string): Promise<{ score: number; feedback: any }> {
