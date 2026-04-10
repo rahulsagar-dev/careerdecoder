@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { interviewService } from "@/services/interviewService";
+import { interviewService, InterviewChatResponse } from "@/services/interviewService";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
