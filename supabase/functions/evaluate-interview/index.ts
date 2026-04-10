@@ -29,7 +29,6 @@ serve(async (req) => {
       });
     }
 
-    // Verify ownership and get session
     const { data: session } = await supabase
       .from("interview_sessions")
       .select("*")
@@ -39,7 +38,6 @@ serve(async (req) => {
 
     if (!session) throw new Error("Session not found");
 
-    // Get full conversation
     const { data: messages } = await supabase
       .from("interview_messages")
       .select("sender, message")
@@ -52,7 +50,12 @@ serve(async (req) => {
       });
     }
 
-    const conversation = messages.map((m: any) => `${m.sender === "ai" ? "Interviewer" : "Candidate"}: ${m.message}`).join("\n\n");
+    const conversation = messages.map((m: any) =>
+      `${m.sender === "ai" ? "Interviewer" : "Candidate"}: ${m.message}`
+    ).join("\n\n");
+
+    const weakTopics = session.weak_topics || [];
+    const topicsCovered = session.topics_covered || [];
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -68,11 +71,13 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an expert interview evaluator. Analyze the following interview conversation and provide a detailed evaluation.`,
+            content: `You are an expert interview evaluator. Analyze the interview conversation thoroughly. The candidate interviewed for a ${session.role} position in ${session.mode} mode. Topics covered: ${topicsCovered.join(", ") || "various"}. Detected weak areas during session: ${weakTopics.join(", ") || "none"}.
+
+Evaluate across 5 dimensions. Be honest and specific — reference actual answers from the conversation.`,
           },
           {
             role: "user",
-            content: `Evaluate this ${session.mode} interview for a ${session.role} position:\n\n${conversation}`,
+            content: `Evaluate this interview:\n\n${conversation}`,
           },
         ],
         tools: [
@@ -80,19 +85,21 @@ serve(async (req) => {
             type: "function",
             function: {
               name: "evaluate_interview",
-              description: "Provide structured interview evaluation",
+              description: "Provide structured interview evaluation with 5 dimensions",
               parameters: {
                 type: "object",
                 properties: {
-                  clarity: { type: "number", description: "Clarity score 0-100" },
-                  depth: { type: "number", description: "Depth of answers 0-100" },
-                  relevance: { type: "number", description: "Relevance to role 0-100" },
-                  confidence: { type: "number", description: "Confidence level 0-100" },
-                  strengths: { type: "array", items: { type: "string" }, description: "List of strengths shown" },
-                  weaknesses: { type: "array", items: { type: "string" }, description: "List of weaknesses" },
-                  improvement_areas: { type: "array", items: { type: "string" }, description: "Areas to improve" },
+                  clarity: { type: "number", description: "Clarity and structure of answers 0-100" },
+                  technical_depth: { type: "number", description: "Depth of technical/domain knowledge 0-100" },
+                  problem_solving: { type: "number", description: "Logical thinking and approach to problems 0-100" },
+                  communication: { type: "number", description: "Flow, articulation, grammar 0-100" },
+                  confidence: { type: "number", description: "Certainty, decisiveness in answers 0-100" },
+                  strengths: { type: "array", items: { type: "string" }, description: "3-5 specific strengths demonstrated, referencing actual answers" },
+                  weaknesses: { type: "array", items: { type: "string" }, description: "3-5 specific weaknesses, referencing actual answers" },
+                  missed_concepts: { type: "array", items: { type: "string" }, description: "Topics the candidate failed, skipped, or explained incorrectly" },
+                  improvement_plan: { type: "array", items: { type: "string" }, description: "5-7 specific, actionable steps to improve (e.g., 'Practice explaining REST API design patterns', 'Study system design fundamentals')" },
                 },
-                required: ["clarity", "depth", "relevance", "confidence", "strengths", "weaknesses", "improvement_areas"],
+                required: ["clarity", "technical_depth", "problem_solving", "communication", "confidence", "strengths", "weaknesses", "missed_concepts", "improvement_plan"],
                 additionalProperties: false,
               },
             },
@@ -117,25 +124,27 @@ serve(async (req) => {
       throw new Error("Failed to parse evaluation");
     }
 
-    // Compute weighted score
+    // New weighted scoring: 25% clarity, 25% depth, 20% problem_solving, 15% communication, 15% confidence
     const score = Math.round(
-      0.4 * evaluation.clarity +
-      0.3 * evaluation.depth +
-      0.2 * evaluation.relevance +
-      0.1 * evaluation.confidence
+      0.25 * evaluation.clarity +
+      0.25 * evaluation.technical_depth +
+      0.20 * evaluation.problem_solving +
+      0.15 * evaluation.communication +
+      0.15 * evaluation.confidence
     );
 
     const feedback = {
       clarity: evaluation.clarity,
-      depth: evaluation.depth,
-      relevance: evaluation.relevance,
+      technical_depth: evaluation.technical_depth,
+      problem_solving: evaluation.problem_solving,
+      communication: evaluation.communication,
       confidence: evaluation.confidence,
       strengths: evaluation.strengths,
       weaknesses: evaluation.weaknesses,
-      improvement_areas: evaluation.improvement_areas,
+      missed_concepts: evaluation.missed_concepts,
+      improvement_plan: evaluation.improvement_plan,
     };
 
-    // Update session
     await supabase
       .from("interview_sessions")
       .update({ score, feedback })
