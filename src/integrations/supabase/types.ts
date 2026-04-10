@@ -124,30 +124,45 @@ export type Database = {
       interview_sessions: {
         Row: {
           created_at: string
+          current_question_index: number
+          difficulty_level: string
           feedback: Json | null
+          follow_up_count: number
           id: string
           mode: string
           role: string
           score: number
+          topics_covered: string[]
           user_id: string
+          weak_topics: string[]
         }
         Insert: {
           created_at?: string
+          current_question_index?: number
+          difficulty_level?: string
           feedback?: Json | null
+          follow_up_count?: number
           id?: string
           mode?: string
           role?: string
           score?: number
+          topics_covered?: string[]
           user_id: string
+          weak_topics?: string[]
         }
         Update: {
           created_at?: string
+          current_question_index?: number
+          difficulty_level?: string
           feedback?: Json | null
+          follow_up_count?: number
           id?: string
           mode?: string
           role?: string
           score?: number
+          topics_covered?: string[]
           user_id?: string
+          weak_topics?: string[]
         }
         Relationships: []
       }
