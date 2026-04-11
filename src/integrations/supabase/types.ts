@@ -198,32 +198,56 @@ export type Database = {
       }
       market_data: {
         Row: {
+          competition_level: string | null
           created_at: string
+          declining_skills: string[] | null
           demand_level: string | null
+          high_impact_skills: string[] | null
           id: string
           insights: string | null
+          last_updated: string | null
+          market_position_score: number | null
           role: string
+          role_growth_rate: number | null
           salary_range: string | null
+          skill_demand_scores: Json | null
+          strategy_plan: string[] | null
           trending_skills: string[] | null
           user_id: string
         }
         Insert: {
+          competition_level?: string | null
           created_at?: string
+          declining_skills?: string[] | null
           demand_level?: string | null
+          high_impact_skills?: string[] | null
           id?: string
           insights?: string | null
+          last_updated?: string | null
+          market_position_score?: number | null
           role?: string
+          role_growth_rate?: number | null
           salary_range?: string | null
+          skill_demand_scores?: Json | null
+          strategy_plan?: string[] | null
           trending_skills?: string[] | null
           user_id: string
         }
         Update: {
+          competition_level?: string | null
           created_at?: string
+          declining_skills?: string[] | null
           demand_level?: string | null
+          high_impact_skills?: string[] | null
           id?: string
           insights?: string | null
+          last_updated?: string | null
+          market_position_score?: number | null
           role?: string
+          role_growth_rate?: number | null
           salary_range?: string | null
+          skill_demand_scores?: Json | null
+          strategy_plan?: string[] | null
           trending_skills?: string[] | null
           user_id?: string
         }
