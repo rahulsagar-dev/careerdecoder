@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.generate-market-insights]
 verify_jwt = false
+
+[functions.generate-career-report]
+verify_jwt = false

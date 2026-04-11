@@ -5,20 +5,28 @@ export interface MarketData {
   user_id: string;
   role: string;
   trending_skills: string[];
+  declining_skills: string[];
   salary_range: string;
   demand_level: string;
+  competition_level: string;
+  role_growth_rate: number;
+  skill_demand_scores: Record<string, number>;
   insights: string;
+  market_position_score: number;
+  high_impact_skills: string[];
+  strategy_plan: string[];
+  last_updated: string;
   created_at: string;
 }
 
 export const marketService = {
-  async generateInsights(role: string): Promise<MarketData> {
+  async generateInsights(role: string, userSkills?: string[]): Promise<MarketData> {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error("Not authenticated");
 
     const { data, error } = await supabase.functions.invoke("generate-market-insights", {
       headers: { Authorization: `Bearer ${session.access_token}` },
-      body: { role },
+      body: { role, user_skills: userSkills || [] },
     });
 
     if (error) throw new Error(error.message || "Failed to generate insights");
