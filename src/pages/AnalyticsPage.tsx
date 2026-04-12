@@ -118,23 +118,17 @@ const AnalyticsPage = () => {
         {skillDistData.length > 0 && (
           <Card className="rounded-2xl shadow-sm border">
             <CardHeader><CardTitle className="text-lg">Skill Distribution</CardTitle></CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
+            <CardContent className="space-y-4">
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
                   <Pie
                     data={skillDistData}
                     cx="50%"
                     cy="50%"
-                    outerRadius={70}
-                    innerRadius={30}
+                    outerRadius={78}
+                    innerRadius={42}
                     dataKey="value"
-                    label={({ name, value, x, y, textAnchor }) => (
-                      <text x={x} y={y} textAnchor={textAnchor} dominantBaseline="central" className="fill-foreground text-xs">
-                        {name.length > 14 ? `${name.slice(0, 12)}..` : name}: {value}
-                      </text>
-                    )}
-                    labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
-                    paddingAngle={2}
+                    paddingAngle={3}
                   >
                     {skillDistData.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -143,6 +137,19 @@ const AnalyticsPage = () => {
                   <Tooltip formatter={(value: number, name: string) => [`${value} skills`, name]} />
                 </PieChart>
               </ResponsiveContainer>
+
+              <div className="space-y-2">
+                {skillDistData.map((item, i) => (
+                  <div key={item.name} className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/30 px-3 py-2">
+                    <span
+                      className="h-3 w-3 shrink-0 rounded-full"
+                      style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                    />
+                    <span className="text-sm text-foreground">{item.name}</span>
+                    <span className="ml-auto text-sm font-medium text-muted-foreground">{item.value}</span>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         )}
