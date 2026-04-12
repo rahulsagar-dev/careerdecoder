@@ -119,14 +119,28 @@ const AnalyticsPage = () => {
           <Card className="rounded-2xl shadow-sm border">
             <CardHeader><CardTitle className="text-lg">Skill Distribution</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie data={skillDistData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
+                  <Pie
+                    data={skillDistData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={70}
+                    innerRadius={30}
+                    dataKey="value"
+                    label={({ name, value, x, y, textAnchor }) => (
+                      <text x={x} y={y} textAnchor={textAnchor} dominantBaseline="central" className="fill-foreground text-xs">
+                        {name.length > 14 ? `${name.slice(0, 12)}..` : name}: {value}
+                      </text>
+                    )}
+                    labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
+                    paddingAngle={2}
+                  >
                     {skillDistData.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip formatter={(value: number, name: string) => [`${value} skills`, name]} />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
