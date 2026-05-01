@@ -44,10 +44,9 @@ const AnalyticsPage = () => {
     .reverse();
 
   const skillDistData = skillAnalysis?.skill_distribution
-    ? Object.entries(skillAnalysis.skill_distribution as Record<string, number>).map(([name, value]) => ({
-        name,
-        value: Number(value),
-      }))
+    ? Object.entries(skillAnalysis.skill_distribution as Record<string, unknown>)
+        .filter(([name, value]) => !name.startsWith("_") && (typeof value === "number" || !isNaN(Number(value))))
+        .map(([name, value]) => ({ name, value: Number(value) }))
     : [];
 
   if (loading) {
