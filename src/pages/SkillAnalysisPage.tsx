@@ -131,7 +131,9 @@ const SkillAnalysisPage = () => {
 
   const distributionData = useMemo(() => {
     if (!analysis?.skill_distribution) return [];
-    return Object.entries(analysis.skill_distribution).map(([name, value]) => ({ name, value }));
+    return Object.entries(analysis.skill_distribution)
+      .filter(([name, value]) => !name.startsWith("_") && typeof value === "number")
+      .map(([name, value]) => ({ name, value: value as number }));
   }, [analysis]);
 
   const regenerate = async () => {
