@@ -51,7 +51,10 @@ const MarketIntelligencePage = () => {
   };
 
   const topDemandSkills = data?.skill_demand_scores
-    ? Object.entries(data.skill_demand_scores).sort(([, a], [, b]) => b - a).slice(0, 8)
+    ? Object.entries(data.skill_demand_scores)
+        .filter(([, v]) => typeof v === "number")
+        .sort(([, a], [, b]) => (b as number) - (a as number))
+        .slice(0, 8) as [string, number][]
     : [];
 
   return (
