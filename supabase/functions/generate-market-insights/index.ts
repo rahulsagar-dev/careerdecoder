@@ -102,16 +102,20 @@ serve(async (req) => {
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
       console.error("AI error:", aiResponse.status, errText);
-      throw new Error("AI request failed");
+      if (aiResponse.status === 429) throw new Error("Rate limit reached. Please try again in a moment.");
+      if (aiResponse.status === 402) throw new Error("AI credits exhausted. Please add credits in Lovable AI settings.");
+      throw new Error(`AI request failed (${aiResponse.status})`);
     }
 
     const aiData = await aiResponse.json();
     let marketData;
     try {
       const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+      if (!toolCall?.function?.arguments) throw new Error("No tool call in AI response");
       marketData = JSON.parse(toolCall.function.arguments);
-    } catch {
-      throw new Error("Failed to parse market data");
+    } catch (e) {
+      console.error("Parse error:", e, JSON.stringify(aiData).slice(0, 500));
+      throw new Error("Failed to parse market data from AI");
     }
 
     // Compute market position score
