@@ -10,7 +10,16 @@ export interface MarketData {
   demand_level: string;
   competition_level: string;
   role_growth_rate: number;
-  skill_demand_scores: Record<string, number>;
+  skill_demand_scores: Record<string, number> & {
+    __meta__?: {
+      salary_by_experience?: { entry: string; mid: string; senior: string };
+      top_hiring_cities?: string[];
+      top_hiring_companies?: string[];
+      skill_gaps?: { skill: string; demand_score: number; priority: "Critical" | "High" | "Medium" }[];
+      matched_skills?: string[];
+      experience_level?: string;
+    };
+  };
   insights: string;
   market_position_score: number;
   high_impact_skills: string[];
