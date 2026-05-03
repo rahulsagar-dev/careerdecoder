@@ -50,9 +50,10 @@ const MarketIntelligencePage = () => {
     }
   };
 
+  const meta = data?.skill_demand_scores?.__meta__;
   const topDemandSkills = data?.skill_demand_scores
     ? Object.entries(data.skill_demand_scores)
-        .filter(([, v]) => typeof v === "number")
+        .filter(([k, v]) => k !== "__meta__" && typeof v === "number")
         .sort(([, a], [, b]) => (b as number) - (a as number))
         .slice(0, 8) as [string, number][]
     : [];
