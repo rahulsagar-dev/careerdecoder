@@ -6,6 +6,45 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ---------- Skill normalization ----------
+const SKILL_SYNONYMS: Record<string, string> = {
+  "js": "javascript",
+  "ecmascript": "javascript",
+  "ts": "typescript",
+  "reactjs": "react",
+  "react.js": "react",
+  "nextjs": "next.js",
+  "node": "node.js",
+  "nodejs": "node.js",
+  "py": "python",
+  "golang": "go",
+  "k8s": "kubernetes",
+  "tf": "terraform",
+  "postgres": "postgresql",
+  "ml": "machine learning",
+  "dl": "deep learning",
+  "nlp": "natural language processing",
+  "cv": "computer vision",
+  "gcp": "google cloud",
+  "aws cloud": "aws",
+  "tailwindcss": "tailwind",
+  "rest api": "rest",
+  "restful": "rest",
+};
+
+const normalize = (s: string) =>
+  (SKILL_SYNONYMS[s.trim().toLowerCase()] || s.trim().toLowerCase())
+    .replace(/[^a-z0-9+.# ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const fuzzyMatch = (a: string, b: string) => {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  if (a.length >= 3 && b.length >= 3 && (a.includes(b) || b.includes(a))) return true;
+  return false;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -23,22 +62,22 @@ serve(async (req) => {
     if (authError || !user) throw new Error("Not authenticated");
 
     const { role, user_skills } = await req.json();
-    if (!role) {
-      return new Response(JSON.stringify({ error: "Missing role" }), {
+    if (!role || typeof role !== "string" || role.trim().length < 2) {
+      return new Response(JSON.stringify({ error: "Invalid role" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Fetch user skills from profile if not provided
-    let skills = user_skills || [];
-    if (!skills.length) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("skills")
-        .eq("id", user.id)
-        .single();
-      skills = profile?.skills || [];
-    }
+    // Fetch user profile (skills + experience for context)
+    let skills: string[] = Array.isArray(user_skills) ? user_skills : [];
+    let experienceLevel = "entry";
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("skills, experience_level, education_level")
+      .eq("id", user.id)
+      .single();
+    if (!skills.length) skills = profile?.skills || [];
+    if (profile?.experience_level) experienceLevel = profile.experience_level;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -54,11 +93,23 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a career market analyst with deep knowledge of the INDIAN tech industry trends, compensation data (in INR), and hiring patterns. The user has these skills: [${skills.join(", ")}]. Provide realistic, data-driven market insights comparing their profile against the Indian market demands. ALL salary figures MUST be in Indian Rupees (INR / ₹) using LPA (Lakhs Per Annum) format.`,
+            content: `You are a senior market analyst specializing in the INDIAN tech job market (NCR, Bangalore, Hyderabad, Pune, Chennai, Mumbai). You have access to current hiring trends from Naukri, LinkedIn India, Instahyre, and Cutshort. ALL salary figures MUST be in Indian Rupees (₹) using LPA (Lakhs Per Annum) format. Be realistic and data-driven — Indian salaries differ significantly from US figures (do NOT use US numbers). Calibrate to the candidate experience level: "${experienceLevel}".`,
           },
           {
             role: "user",
-            content: `Provide comprehensive market intelligence for the role: "${role}" in the INDIAN job market. The candidate has skills: [${skills.join(", ")}]. Analyze trending vs declining skills, salary ranges (in INR LPA, e.g. "₹8 LPA - ₹18 LPA"), demand/competition levels, growth rate, and provide strategic recommendations comparing the candidate's skills against market needs.`,
+            content: `Generate comprehensive market intelligence for "${role}" in India.
+
+Candidate skills: [${skills.join(", ") || "none provided"}]
+Experience: ${experienceLevel}
+
+Requirements:
+1. Trending skills (10-12) MUST be specific and currently in demand for THIS role in India 2025-2026.
+2. Declining skills (3-5) — actually losing relevance for this role.
+3. Salary ranges in ₹ LPA — provide realistic India bands by experience tier.
+4. skill_demand_scores: rate 0-100 for each trending skill AND each user skill (so we can compare).
+5. Include top hiring cities and top hiring companies in India for this role.
+6. high_impact_skills: 5 skills the user does NOT have but should learn (highest ROI).
+7. strategy_plan: 5-6 specific, actionable steps tied to the candidate's gap.`,
           },
         ],
         tools: [
@@ -66,30 +117,39 @@ serve(async (req) => {
             type: "function",
             function: {
               name: "market_insights",
-              description: "Return structured context-aware market intelligence",
+              description: "Structured Indian-market intelligence for a role",
               parameters: {
                 type: "object",
                 properties: {
-                  trending_skills: { type: "array", items: { type: "string" }, description: "Top 8-12 trending/in-demand skills for this role" },
-                  declining_skills: { type: "array", items: { type: "string" }, description: "3-6 skills losing market relevance for this role" },
-                  salary_range: { type: "string", description: "Salary range in Indian Rupees using LPA format, e.g. '₹8 LPA - ₹18 LPA' or '₹12,00,000 - ₹25,00,000'" },
-                  demand_level: { type: "string", enum: ["High", "Medium", "Low"], description: "Current market demand" },
-                  competition_level: { type: "string", enum: ["High", "Medium", "Low"], description: "Competition among candidates" },
-                  role_growth_rate: { type: "number", description: "Annual role growth rate percentage e.g. 15.5" },
+                  trending_skills: { type: "array", items: { type: "string" }, description: "10-12 trending skills (specific tech/tools, not categories)" },
+                  declining_skills: { type: "array", items: { type: "string" }, description: "3-5 declining skills" },
+                  salary_range: { type: "string", description: "Overall realistic India salary band, e.g. '₹6 LPA - ₹22 LPA'" },
+                  salary_by_experience: {
+                    type: "object",
+                    description: "Salary bands by tier in ₹ LPA",
+                    properties: {
+                      entry: { type: "string", description: "0-2 yrs, e.g. '₹4 LPA - ₹8 LPA'" },
+                      mid: { type: "string", description: "3-6 yrs" },
+                      senior: { type: "string", description: "7+ yrs" },
+                    },
+                    required: ["entry", "mid", "senior"],
+                    additionalProperties: false,
+                  },
+                  demand_level: { type: "string", enum: ["High", "Medium", "Low"] },
+                  competition_level: { type: "string", enum: ["High", "Medium", "Low"] },
+                  role_growth_rate: { type: "number", description: "Annual role growth %, realistic India figure 5-30" },
                   skill_demand_scores: {
                     type: "object",
-                    description: "Map of skill names to demand scores 0-100, include both trending and user's current skills",
+                    description: "Skill name → 0-100 demand score. Include trending skills AND user skills.",
                     additionalProperties: { type: "number" },
                   },
-                  insights: { type: "string", description: "2-3 paragraph analysis of market trends, growth outlook" },
-                  high_impact_skills: { type: "array", items: { type: "string" }, description: "Top 5 skills the user should learn for maximum career impact (skills they DON'T already have)" },
-                  strategy_plan: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "4-6 specific strategic recommendations like 'Learn TypeScript to enter top 20% candidates' or 'Avoid focusing on jQuery (declining demand)'",
-                  },
+                  top_hiring_cities: { type: "array", items: { type: "string" }, description: "5 Indian cities hiring most for this role" },
+                  top_hiring_companies: { type: "array", items: { type: "string" }, description: "8 companies actively hiring this role in India" },
+                  insights: { type: "string", description: "2-3 paragraph market analysis specific to India" },
+                  high_impact_skills: { type: "array", items: { type: "string" }, description: "5 skills user does NOT have but should learn" },
+                  strategy_plan: { type: "array", items: { type: "string" }, description: "5-6 specific, actionable strategic recommendations" },
                 },
-                required: ["trending_skills", "declining_skills", "salary_range", "demand_level", "competition_level", "role_growth_rate", "skill_demand_scores", "insights", "high_impact_skills", "strategy_plan"],
+                required: ["trending_skills", "declining_skills", "salary_range", "salary_by_experience", "demand_level", "competition_level", "role_growth_rate", "skill_demand_scores", "top_hiring_cities", "top_hiring_companies", "insights", "high_impact_skills", "strategy_plan"],
                 additionalProperties: false,
               },
             },
@@ -108,7 +168,7 @@ serve(async (req) => {
     }
 
     const aiData = await aiResponse.json();
-    let marketData;
+    let marketData: any;
     try {
       const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
       if (!toolCall?.function?.arguments) throw new Error("No tool call in AI response");
@@ -118,15 +178,58 @@ serve(async (req) => {
       throw new Error("Failed to parse market data from AI");
     }
 
-    // Compute market position score
-    const userSkillsLower = skills.map((s: string) => s.toLowerCase());
-    const trendingLower = (marketData.trending_skills || []).map((s: string) => s.toLowerCase());
-    const matchedTrending = userSkillsLower.filter((s: string) =>
-      trendingLower.some((t: string) => t.includes(s) || s.includes(t))
-    );
-    const marketPositionScore = trendingLower.length > 0
-      ? Math.round((matchedTrending.length / trendingLower.length) * 100)
+    // ---------- Deterministic weighted Market Position Score ----------
+    // Blend: 70% weighted-by-demand skill coverage + 30% raw coverage
+    const userNorm = skills.map(normalize).filter(Boolean);
+    const trendingNorm = (marketData.trending_skills || []).map(normalize);
+    const decliningNorm = (marketData.declining_skills || []).map(normalize);
+    const demandScores: Record<string, number> = marketData.skill_demand_scores || {};
+
+    const totalDemandWeight = trendingNorm.reduce((sum: number, s: string) => {
+      // Find demand score for this trending skill (case-insensitive lookup)
+      const key = Object.keys(demandScores).find((k) => normalize(k) === s);
+      return sum + (key ? Math.max(0, Math.min(100, demandScores[key])) : 50);
+    }, 0);
+
+    const matchedDemandWeight = trendingNorm.reduce((sum: number, t: string) => {
+      const isMatched = userNorm.some((u: string) => fuzzyMatch(u, t));
+      if (!isMatched) return sum;
+      const key = Object.keys(demandScores).find((k) => normalize(k) === t);
+      return sum + (key ? Math.max(0, Math.min(100, demandScores[key])) : 50);
+    }, 0);
+
+    const weightedCoverage = totalDemandWeight > 0
+      ? (matchedDemandWeight / totalDemandWeight) * 100
       : 0;
+
+    const matchedCount = trendingNorm.filter((t: string) =>
+      userNorm.some((u: string) => fuzzyMatch(u, t))
+    ).length;
+    const rawCoverage = trendingNorm.length > 0 ? (matchedCount / trendingNorm.length) * 100 : 0;
+
+    // Penalty for declining skills the user still emphasizes
+    const decliningHits = userNorm.filter((u: string) =>
+      decliningNorm.some((d: string) => fuzzyMatch(u, d))
+    ).length;
+    const decliningPenalty = Math.min(15, decliningHits * 5);
+
+    let marketPositionScore = Math.round(weightedCoverage * 0.7 + rawCoverage * 0.3 - decliningPenalty);
+    marketPositionScore = Math.max(0, Math.min(100, marketPositionScore));
+
+    // ---------- Skill gap with priority ----------
+    const skillGaps = trendingNorm
+      .map((t: string, i: number) => {
+        const original = marketData.trending_skills[i];
+        const matched = userNorm.some((u: string) => fuzzyMatch(u, t));
+        if (matched) return null;
+        const key = Object.keys(demandScores).find((k) => normalize(k) === t);
+        const score = key ? demandScores[key] : 50;
+        const priority = score >= 80 ? "Critical" : score >= 60 ? "High" : "Medium";
+        return { skill: original, demand_score: score, priority };
+      })
+      .filter(Boolean)
+      .sort((a: any, b: any) => b.demand_score - a.demand_score)
+      .slice(0, 8);
 
     // Delete old data for this role/user, insert new
     await supabase
@@ -146,7 +249,19 @@ serve(async (req) => {
         demand_level: marketData.demand_level,
         competition_level: marketData.competition_level || "Medium",
         role_growth_rate: marketData.role_growth_rate || 0,
-        skill_demand_scores: marketData.skill_demand_scores || {},
+        skill_demand_scores: {
+          ...(marketData.skill_demand_scores || {}),
+          __meta__: {
+            salary_by_experience: marketData.salary_by_experience,
+            top_hiring_cities: marketData.top_hiring_cities || [],
+            top_hiring_companies: marketData.top_hiring_companies || [],
+            skill_gaps: skillGaps,
+            matched_skills: trendingNorm.filter((t: string) =>
+              userNorm.some((u: string) => fuzzyMatch(u, t))
+            ),
+            experience_level: experienceLevel,
+          },
+        },
         insights: marketData.insights,
         market_position_score: marketPositionScore,
         high_impact_skills: marketData.high_impact_skills || [],
@@ -161,7 +276,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ data: inserted }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (e) {
+  } catch (e: any) {
     console.error("market-insights error:", e);
     return new Response(JSON.stringify({ error: e.message || "Unknown error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
