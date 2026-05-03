@@ -50,15 +50,15 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "system",
-            content: `You are a career market analyst with deep knowledge of tech industry trends, compensation data, and hiring patterns. The user has these skills: [${skills.join(", ")}]. Provide realistic, data-driven market insights comparing their profile against market demands.`,
+            content: `You are a career market analyst with deep knowledge of the INDIAN tech industry trends, compensation data (in INR), and hiring patterns. The user has these skills: [${skills.join(", ")}]. Provide realistic, data-driven market insights comparing their profile against the Indian market demands. ALL salary figures MUST be in Indian Rupees (INR / ₹) using LPA (Lakhs Per Annum) format.`,
           },
           {
             role: "user",
-            content: `Provide comprehensive market intelligence for the role: "${role}". The candidate has skills: [${skills.join(", ")}]. Analyze trending vs declining skills, salary ranges, demand/competition levels, growth rate, and provide strategic recommendations comparing the candidate's skills against market needs.`,
+            content: `Provide comprehensive market intelligence for the role: "${role}" in the INDIAN job market. The candidate has skills: [${skills.join(", ")}]. Analyze trending vs declining skills, salary ranges (in INR LPA, e.g. "₹8 LPA - ₹18 LPA"), demand/competition levels, growth rate, and provide strategic recommendations comparing the candidate's skills against market needs.`,
           },
         ],
         tools: [
