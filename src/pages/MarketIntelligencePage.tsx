@@ -174,6 +174,104 @@ const MarketIntelligencePage = () => {
             </Card>
           </div>
 
+          {/* Salary by Experience */}
+          {meta?.salary_by_experience && (
+            <Card className="rounded-2xl shadow-sm border">
+              <CardHeader className="flex flex-row items-center gap-3">
+                <DollarSign className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg">Salary by Experience (India)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {(["entry", "mid", "senior"] as const).map((tier) => (
+                    <div key={tier} className="rounded-xl border p-4 text-center bg-muted/30">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">{tier === "entry" ? "Entry (0-2 yrs)" : tier === "mid" ? "Mid (3-6 yrs)" : "Senior (7+ yrs)"}</p>
+                      <p className="text-lg font-bold text-foreground mt-2">{meta.salary_by_experience![tier]}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Skill Gap Analysis */}
+          {meta?.skill_gaps && meta.skill_gaps.length > 0 && (
+            <Card className="rounded-2xl shadow-sm border">
+              <CardHeader className="flex flex-row items-center gap-3">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                <CardTitle className="text-lg">Skill Gap Analysis</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {meta.skill_gaps.map((g) => (
+                  <div key={g.skill} className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium">{g.skill}</span>
+                      <Badge className={
+                        g.priority === "Critical" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
+                        g.priority === "High" ? "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400" :
+                        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                      }>{g.priority}</Badge>
+                    </div>
+                    <span className="text-xs text-muted-foreground">Demand: {g.demand_score}/100</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Matched Skills */}
+          {meta?.matched_skills && meta.matched_skills.length > 0 && (
+            <Card className="rounded-2xl shadow-sm border border-green-500/20 bg-green-500/5">
+              <CardHeader className="flex flex-row items-center gap-3">
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <CardTitle className="text-lg">Your Matching In-Demand Skills</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {meta.matched_skills.map((s) => (
+                    <Badge key={s} className="rounded-lg px-3 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 capitalize">{s}</Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Top Hiring Cities */}
+            {meta?.top_hiring_cities && meta.top_hiring_cities.length > 0 && (
+              <Card className="rounded-2xl shadow-sm border">
+                <CardHeader className="flex flex-row items-center gap-3">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-lg">Top Hiring Cities</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {meta.top_hiring_cities.map((c) => (
+                      <Badge key={c} variant="outline" className="rounded-lg px-3 py-1">{c}</Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Top Hiring Companies */}
+            {meta?.top_hiring_companies && meta.top_hiring_companies.length > 0 && (
+              <Card className="rounded-2xl shadow-sm border">
+                <CardHeader className="flex flex-row items-center gap-3">
+                  <Building2 className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-lg">Top Hiring Companies</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {meta.top_hiring_companies.map((c) => (
+                      <Badge key={c} variant="outline" className="rounded-lg px-3 py-1">{c}</Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
           {/* High Impact Skills */}
           {data.high_impact_skills?.length > 0 && (
             <Card className="rounded-2xl shadow-sm border border-primary/20 bg-primary/5">
