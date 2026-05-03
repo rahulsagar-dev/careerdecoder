@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import {
   Loader2, TrendingUp, TrendingDown, DollarSign, BarChart3, Lightbulb, Search,
-  Target, Zap, Shield, ArrowUpRight, ArrowDownRight,
+  Target, Zap, Shield, ArrowUpRight, MapPin, Building2, AlertTriangle, CheckCircle2,
 } from "lucide-react";
 
 const demandColors: Record<string, string> = {
