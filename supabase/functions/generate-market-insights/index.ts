@@ -50,15 +50,15 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "system",
-            content: `You are a career market analyst with deep knowledge of tech industry trends, compensation data, and hiring patterns. The user has these skills: [${skills.join(", ")}]. Provide realistic, data-driven market insights comparing their profile against market demands.`,
+            content: `You are a career market analyst with deep knowledge of the INDIAN tech industry trends, compensation data (in INR), and hiring patterns. The user has these skills: [${skills.join(", ")}]. Provide realistic, data-driven market insights comparing their profile against the Indian market demands. ALL salary figures MUST be in Indian Rupees (INR / ₹) using LPA (Lakhs Per Annum) format.`,
           },
           {
             role: "user",
-            content: `Provide comprehensive market intelligence for the role: "${role}". The candidate has skills: [${skills.join(", ")}]. Analyze trending vs declining skills, salary ranges, demand/competition levels, growth rate, and provide strategic recommendations comparing the candidate's skills against market needs.`,
+            content: `Provide comprehensive market intelligence for the role: "${role}" in the INDIAN job market. The candidate has skills: [${skills.join(", ")}]. Analyze trending vs declining skills, salary ranges (in INR LPA, e.g. "₹8 LPA - ₹18 LPA"), demand/competition levels, growth rate, and provide strategic recommendations comparing the candidate's skills against market needs.`,
           },
         ],
         tools: [
@@ -72,7 +72,7 @@ serve(async (req) => {
                 properties: {
                   trending_skills: { type: "array", items: { type: "string" }, description: "Top 8-12 trending/in-demand skills for this role" },
                   declining_skills: { type: "array", items: { type: "string" }, description: "3-6 skills losing market relevance for this role" },
-                  salary_range: { type: "string", description: "Salary range like '$80,000 - $140,000'" },
+                  salary_range: { type: "string", description: "Salary range in Indian Rupees using LPA format, e.g. '₹8 LPA - ₹18 LPA' or '₹12,00,000 - ₹25,00,000'" },
                   demand_level: { type: "string", enum: ["High", "Medium", "Low"], description: "Current market demand" },
                   competition_level: { type: "string", enum: ["High", "Medium", "Low"], description: "Competition among candidates" },
                   role_growth_rate: { type: "number", description: "Annual role growth rate percentage e.g. 15.5" },
@@ -102,16 +102,20 @@ serve(async (req) => {
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
       console.error("AI error:", aiResponse.status, errText);
-      throw new Error("AI request failed");
+      if (aiResponse.status === 429) throw new Error("Rate limit reached. Please try again in a moment.");
+      if (aiResponse.status === 402) throw new Error("AI credits exhausted. Please add credits in Lovable AI settings.");
+      throw new Error(`AI request failed (${aiResponse.status})`);
     }
 
     const aiData = await aiResponse.json();
     let marketData;
     try {
       const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+      if (!toolCall?.function?.arguments) throw new Error("No tool call in AI response");
       marketData = JSON.parse(toolCall.function.arguments);
-    } catch {
-      throw new Error("Failed to parse market data");
+    } catch (e) {
+      console.error("Parse error:", e, JSON.stringify(aiData).slice(0, 500));
+      throw new Error("Failed to parse market data from AI");
     }
 
     // Compute market position score
