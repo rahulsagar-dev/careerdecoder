@@ -72,7 +72,7 @@ serve(async (req) => {
                 properties: {
                   trending_skills: { type: "array", items: { type: "string" }, description: "Top 8-12 trending/in-demand skills for this role" },
                   declining_skills: { type: "array", items: { type: "string" }, description: "3-6 skills losing market relevance for this role" },
-                  salary_range: { type: "string", description: "Salary range like '$80,000 - $140,000'" },
+                  salary_range: { type: "string", description: "Salary range in Indian Rupees using LPA format, e.g. '₹8 LPA - ₹18 LPA' or '₹12,00,000 - ₹25,00,000'" },
                   demand_level: { type: "string", enum: ["High", "Medium", "Low"], description: "Current market demand" },
                   competition_level: { type: "string", enum: ["High", "Medium", "Low"], description: "Competition among candidates" },
                   role_growth_rate: { type: "number", description: "Annual role growth rate percentage e.g. 15.5" },
