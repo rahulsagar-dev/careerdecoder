@@ -316,7 +316,7 @@ const Profile = () => {
                   <button
                     onClick={async () => {
                       try {
-                        const url = await profileService.getResumeSignedUrl(profile.resume_url!);
+                        const url = await profileService.getResumeBlobUrl(profile.resume_url!);
                         window.open(url, "_blank", "noopener,noreferrer");
                       } catch (e: unknown) {
                         toast.error(e instanceof Error ? e.message : "Failed to open resume");
