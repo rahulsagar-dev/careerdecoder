@@ -31,6 +31,8 @@ const ProfileSetup = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [customSkill, setCustomSkill] = useState("");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -46,6 +48,33 @@ const ProfileSetup = () => {
     career_goal: "",
     resume_url: "",
   });
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const existing = await profileService.getProfile();
+        if (existing) {
+          setIsEditMode(true);
+          setFormData({
+            full_name: existing.full_name || "",
+            education: existing.education || "",
+            college: existing.college || "",
+            degree: existing.degree || "",
+            graduation_year: existing.graduation_year || undefined,
+            skills: existing.skills || [],
+            interests: existing.interests || [],
+            career_goal: existing.career_goal || "",
+            resume_url: existing.resume_url || "",
+            github_url: existing.github_url || "",
+          });
+        }
+      } catch {
+        // ignore — treat as new user
+      } finally {
+        setInitialLoading(false);
+      }
+    })();
+  }, []);
 
   const updateField = (field: keyof ProfileData, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
