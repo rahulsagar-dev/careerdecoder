@@ -57,17 +57,18 @@ export const profileService = {
     return data;
   },
 
-  async getResumeSignedUrl(pathOrUrl: string): Promise<string> {
+  async getResumeBlobUrl(pathOrUrl: string): Promise<string> {
     if (!pathOrUrl) throw new Error("No resume on file");
     let path = pathOrUrl;
     const marker = "/resumes/";
     const idx = pathOrUrl.indexOf(marker);
-    if (idx !== -1) path = pathOrUrl.substring(idx + marker.length);
-    const { data, error } = await supabase.storage
-      .from("resumes")
-      .createSignedUrl(path, 3600);
+    if (idx !== -1) {
+      const after = pathOrUrl.substring(idx + marker.length);
+      path = after.split("?")[0];
+    }
+    const { data, error } = await supabase.storage.from("resumes").download(path);
     if (error) throw error;
-    return data.signedUrl;
+    return URL.createObjectURL(data);
   },
 
   async uploadResume(file: File) {
