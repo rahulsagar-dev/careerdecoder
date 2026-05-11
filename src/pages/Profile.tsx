@@ -313,10 +313,20 @@ const Profile = () => {
                   <CardTitle className="text-lg font-semibold">Resume</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <a href={profile.resume_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm flex items-center gap-1.5 group">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const url = await profileService.getResumeSignedUrl(profile.resume_url!);
+                        window.open(url, "_blank", "noopener,noreferrer");
+                      } catch (e: unknown) {
+                        toast.error(e instanceof Error ? e.message : "Failed to open resume");
+                      }
+                    }}
+                    className="text-primary hover:underline text-sm flex items-center gap-1.5 group"
+                  >
                     <FileText className="h-4 w-4 group-hover:scale-110 transition-transform" />
                     View Resume <ExternalLink className="h-3 w-3" />
-                  </a>
+                  </button>
                 </CardContent>
               </Card>
             )}
