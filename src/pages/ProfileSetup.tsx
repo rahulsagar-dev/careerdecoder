@@ -119,15 +119,21 @@ const ProfileSetup = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      let resumeUrl = "";
+      let resumeUrl = formData.resume_url || "";
       if (resumeFile) {
         resumeUrl = await profileService.uploadResume(resumeFile);
       }
-      await profileService.createProfile({ ...formData, resume_url: resumeUrl || undefined });
-      toast.success("Profile created successfully!");
+      const payload = { ...formData, resume_url: resumeUrl || undefined };
+      if (isEditMode) {
+        await profileService.updateProfile(payload);
+        toast.success("Profile updated successfully!");
+      } else {
+        await profileService.createProfile(payload);
+        toast.success("Profile created successfully!");
+      }
       navigate("/dashboard");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to create profile";
+      const message = err instanceof Error ? err.message : (isEditMode ? "Failed to update profile" : "Failed to create profile");
       toast.error(message);
     } finally {
       setLoading(false);
