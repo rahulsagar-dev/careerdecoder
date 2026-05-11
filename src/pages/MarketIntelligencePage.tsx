@@ -87,6 +87,11 @@ const MarketIntelligencePage = () => {
               {generating ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Analyzing...</> : <><Search className="h-4 w-4 mr-2" /> Analyze</>}
             </Button>
           </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            {userSkills.length > 0
+              ? `Comparing against ${userSkills.length} of your profile skills`
+              : "Add skills to your profile for a personalised Market Position score"}
+          </p>
         </CardContent>
       </Card>
 
