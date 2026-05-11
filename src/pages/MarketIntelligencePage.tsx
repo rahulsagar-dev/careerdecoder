@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { marketService, MarketData } from "@/services/marketService";
+import { profileService } from "@/services/profileService";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
