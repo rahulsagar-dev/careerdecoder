@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -31,6 +31,8 @@ const ProfileSetup = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [customSkill, setCustomSkill] = useState("");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -46,6 +48,33 @@ const ProfileSetup = () => {
     career_goal: "",
     resume_url: "",
   });
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const existing = await profileService.getProfile();
+        if (existing) {
+          setIsEditMode(true);
+          setFormData({
+            full_name: existing.full_name || "",
+            education: existing.education || "",
+            college: existing.college || "",
+            degree: existing.degree || "",
+            graduation_year: existing.graduation_year || undefined,
+            skills: existing.skills || [],
+            interests: existing.interests || [],
+            career_goal: existing.career_goal || "",
+            resume_url: existing.resume_url || "",
+            github_url: existing.github_url || "",
+          });
+        }
+      } catch {
+        // ignore — treat as new user
+      } finally {
+        setInitialLoading(false);
+      }
+    })();
+  }, []);
 
   const updateField = (field: keyof ProfileData, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -90,15 +119,21 @@ const ProfileSetup = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      let resumeUrl = "";
+      let resumeUrl = formData.resume_url || "";
       if (resumeFile) {
         resumeUrl = await profileService.uploadResume(resumeFile);
       }
-      await profileService.createProfile({ ...formData, resume_url: resumeUrl || undefined });
-      toast.success("Profile created successfully!");
+      const payload = { ...formData, resume_url: resumeUrl || undefined };
+      if (isEditMode) {
+        await profileService.updateProfile(payload);
+        toast.success("Profile updated successfully!");
+      } else {
+        await profileService.createProfile(payload);
+        toast.success("Profile created successfully!");
+      }
       navigate("/dashboard");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to create profile";
+      const message = err instanceof Error ? err.message : (isEditMode ? "Failed to update profile" : "Failed to create profile");
       toast.error(message);
     } finally {
       setLoading(false);
@@ -118,9 +153,25 @@ const ProfileSetup = () => {
 
   const stepLabels = ["Personal Info", "Skills", "Interests", "Resume", "Career Goal"];
 
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
+        {isEditMode && (
+          <div className="mb-4 flex items-center justify-between">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="gap-1.5">
+              <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+            </Button>
+            <span className="text-xs font-medium text-primary">Update mode</span>
+          </div>
+        )}
         {/* Progress */}
         <div className="mb-8">
           <div className="flex justify-between mb-2">
@@ -139,7 +190,7 @@ const ProfileSetup = () => {
         <Card className="shadow-lg rounded-xl border-0">
           <CardHeader>
             <CardTitle className="text-2xl bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent">
-              Step {step} of {TOTAL_STEPS}
+              {isEditMode ? `Update Profile — Step ${step} of ${TOTAL_STEPS}` : `Step ${step} of ${TOTAL_STEPS}`}
             </CardTitle>
             <CardDescription>{stepLabels[step - 1]}</CardDescription>
           </CardHeader>
@@ -297,7 +348,7 @@ const ProfileSetup = () => {
               ) : (
                 <Button onClick={handleSubmit} disabled={loading || !canProceed()} className="bg-gradient-to-r from-primary to-[hsl(260,84%,60%)]">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Complete Setup
+                  {isEditMode ? "Save Changes" : "Complete Setup"}
                 </Button>
               )}
             </div>

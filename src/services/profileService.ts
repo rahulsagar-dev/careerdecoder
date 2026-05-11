@@ -57,6 +57,19 @@ export const profileService = {
     return data;
   },
 
+  async getResumeSignedUrl(pathOrUrl: string): Promise<string> {
+    if (!pathOrUrl) throw new Error("No resume on file");
+    let path = pathOrUrl;
+    const marker = "/resumes/";
+    const idx = pathOrUrl.indexOf(marker);
+    if (idx !== -1) path = pathOrUrl.substring(idx + marker.length);
+    const { data, error } = await supabase.storage
+      .from("resumes")
+      .createSignedUrl(path, 3600);
+    if (error) throw error;
+    return data.signedUrl;
+  },
+
   async uploadResume(file: File) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
