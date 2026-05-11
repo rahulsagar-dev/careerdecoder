@@ -13,6 +13,29 @@ export interface ProfileData {
   github_url?: string;
 }
 
+const sanitizeProfileData = (profileData: ProfileData): ProfileData => ({
+  full_name: profileData.full_name,
+  education: profileData.education,
+  college: profileData.college,
+  degree: profileData.degree,
+  graduation_year: profileData.graduation_year,
+  skills: profileData.skills || [],
+  interests: profileData.interests || [],
+  career_goal: profileData.career_goal,
+  resume_url: profileData.resume_url,
+  github_url: profileData.github_url,
+});
+
+const getResumePath = (pathOrUrl: string) => {
+  let path = pathOrUrl;
+  const marker = "/resumes/";
+  const idx = pathOrUrl.indexOf(marker);
+  if (idx !== -1) {
+    path = pathOrUrl.substring(idx + marker.length).split("?")[0];
+  }
+  return decodeURIComponent(path);
+};
+
 export const profileService = {
   async getProfile() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -34,7 +57,7 @@ export const profileService = {
 
     const { data, error } = await supabase
       .from("profiles")
-      .insert({ id: user.id, ...profileData })
+      .upsert({ id: user.id, ...sanitizeProfileData(profileData) }, { onConflict: "id" })
       .select()
       .single();
 
@@ -48,8 +71,7 @@ export const profileService = {
 
     const { data, error } = await supabase
       .from("profiles")
-      .update(profileData)
-      .eq("id", user.id)
+      .upsert({ id: user.id, ...sanitizeProfileData(profileData) }, { onConflict: "id" })
       .select()
       .single();
 
@@ -57,16 +79,19 @@ export const profileService = {
     return data;
   },
 
+  async getResumeSignedUrl(pathOrUrl: string): Promise<string> {
+    if (!pathOrUrl) throw new Error("No resume on file");
+    const { data, error } = await supabase.storage
+      .from("resumes")
+      .createSignedUrl(getResumePath(pathOrUrl), 300);
+    if (error) throw error;
+    if (!data?.signedUrl) throw new Error("Failed to create resume link");
+    return data.signedUrl;
+  },
+
   async getResumeBlobUrl(pathOrUrl: string): Promise<string> {
     if (!pathOrUrl) throw new Error("No resume on file");
-    let path = pathOrUrl;
-    const marker = "/resumes/";
-    const idx = pathOrUrl.indexOf(marker);
-    if (idx !== -1) {
-      const after = pathOrUrl.substring(idx + marker.length);
-      path = after.split("?")[0];
-    }
-    const { data, error } = await supabase.storage.from("resumes").download(path);
+    const { data, error } = await supabase.storage.from("resumes").download(getResumePath(pathOrUrl));
     if (error) throw error;
     return URL.createObjectURL(data);
   },
