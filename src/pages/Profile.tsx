@@ -315,7 +315,8 @@ const Profile = () => {
                 <CardContent>
                   <button
                     onClick={async () => {
-                      const resumeWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
+                      const resumeWindow = window.open("about:blank", "_blank");
+                      if (resumeWindow) resumeWindow.opener = null;
                       try {
                         const url = await profileService.getResumeSignedUrl(profile.resume_url!);
                         if (resumeWindow) {
