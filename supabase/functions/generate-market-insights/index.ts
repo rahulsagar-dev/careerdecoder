@@ -30,6 +30,13 @@ const SKILL_SYNONYMS: Record<string, string> = {
   "tailwindcss": "tailwind",
   "rest api": "rest",
   "restful": "rest",
+  "html/css": "html css",
+  "css/html": "html css",
+  "oops": "object oriented programming",
+  "oop": "object oriented programming",
+  "object-oriented programming": "object oriented programming",
+  "data viz": "data visualization",
+  "visualisation": "visualization",
 };
 
 const normalize = (s: string) =>
@@ -42,6 +49,9 @@ const fuzzyMatch = (a: string, b: string) => {
   if (!a || !b) return false;
   if (a === b) return true;
   if (a.length >= 3 && b.length >= 3 && (a.includes(b) || b.includes(a))) return true;
+  const aTokens = new Set(a.split(" ").filter((token) => token.length >= 3));
+  const bTokens = b.split(" ").filter((token) => token.length >= 3);
+  if (bTokens.some((token) => aTokens.has(token))) return true;
   return false;
 };
 
