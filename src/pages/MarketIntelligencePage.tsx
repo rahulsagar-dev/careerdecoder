@@ -48,7 +48,10 @@ const MarketIntelligencePage = () => {
     if (!role.trim()) { toast.error("Enter a role"); return; }
     setGenerating(true);
     try {
-      const result = await marketService.generateInsights(role.trim(), userSkills);
+      const profile = await profileService.getProfile();
+      const skills = profile?.skills || userSkills;
+      setUserSkills(skills);
+      const result = await marketService.generateInsights(role.trim(), skills);
       setData(result);
       toast.success("Market insights generated!");
     } catch (e: any) {
