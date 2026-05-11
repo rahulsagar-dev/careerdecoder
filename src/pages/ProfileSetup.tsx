@@ -348,7 +348,7 @@ const ProfileSetup = () => {
               ) : (
                 <Button onClick={handleSubmit} disabled={loading || !canProceed()} className="bg-gradient-to-r from-primary to-[hsl(260,84%,60%)]">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Complete Setup
+                  {isEditMode ? "Save Changes" : "Complete Setup"}
                 </Button>
               )}
             </div>
