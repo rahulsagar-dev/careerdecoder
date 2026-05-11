@@ -73,7 +73,7 @@ serve(async (req) => {
     let experienceLevel = "entry";
     const { data: profile } = await supabase
       .from("profiles")
-      .select("skills, experience_level, education_level")
+      .select("skills")
       .eq("id", user.id)
       .single();
     if (!skills.length) skills = profile?.skills || [];
