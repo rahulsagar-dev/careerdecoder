@@ -36,12 +36,19 @@ const MarketIntelligencePage = () => {
   const [role, setRole] = useState("");
   const [data, setData] = useState<MarketData | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [userSkills, setUserSkills] = useState<string[]>([]);
+
+  useEffect(() => {
+    profileService.getProfile()
+      .then((p) => setUserSkills(p?.skills || []))
+      .catch(() => setUserSkills([]));
+  }, []);
 
   const generate = async () => {
     if (!role.trim()) { toast.error("Enter a role"); return; }
     setGenerating(true);
     try {
-      const result = await marketService.generateInsights(role.trim());
+      const result = await marketService.generateInsights(role.trim(), userSkills);
       setData(result);
       toast.success("Market insights generated!");
     } catch (e: any) {
