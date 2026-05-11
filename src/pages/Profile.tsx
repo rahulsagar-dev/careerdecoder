@@ -315,10 +315,17 @@ const Profile = () => {
                 <CardContent>
                   <button
                     onClick={async () => {
+                      const resumeWindow = window.open("about:blank", "_blank");
+                      if (resumeWindow) resumeWindow.opener = null;
                       try {
-                        const url = await profileService.getResumeBlobUrl(profile.resume_url!);
-                        window.open(url, "_blank", "noopener,noreferrer");
+                        const url = await profileService.getResumeSignedUrl(profile.resume_url!);
+                        if (resumeWindow) {
+                          resumeWindow.location.href = url;
+                        } else {
+                          window.location.href = url;
+                        }
                       } catch (e: unknown) {
+                        resumeWindow?.close();
                         toast.error(e instanceof Error ? e.message : "Failed to open resume");
                       }
                     }}
