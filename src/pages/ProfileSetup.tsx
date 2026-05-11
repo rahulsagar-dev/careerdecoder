@@ -190,7 +190,7 @@ const ProfileSetup = () => {
         <Card className="shadow-lg rounded-xl border-0">
           <CardHeader>
             <CardTitle className="text-2xl bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent">
-              Step {step} of {TOTAL_STEPS}
+              {isEditMode ? `Update Profile — Step ${step} of ${TOTAL_STEPS}` : `Step ${step} of ${TOTAL_STEPS}`}
             </CardTitle>
             <CardDescription>{stepLabels[step - 1]}</CardDescription>
           </CardHeader>
