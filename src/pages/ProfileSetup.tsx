@@ -153,9 +153,25 @@ const ProfileSetup = () => {
 
   const stepLabels = ["Personal Info", "Skills", "Interests", "Resume", "Career Goal"];
 
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
+        {isEditMode && (
+          <div className="mb-4 flex items-center justify-between">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="gap-1.5">
+              <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+            </Button>
+            <span className="text-xs font-medium text-primary">Update mode</span>
+          </div>
+        )}
         {/* Progress */}
         <div className="mb-8">
           <div className="flex justify-between mb-2">
