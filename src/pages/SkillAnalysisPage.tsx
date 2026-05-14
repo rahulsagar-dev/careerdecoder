@@ -82,7 +82,7 @@ function skillMatches(userSkills: string[], requiredSkill: string): boolean {
   if (userNorm.includes(req) || (reqBase && userNorm.includes(reqBase))) return true;
 
   for (const userSkill of userNorm) {
-    if (userSkill.length > 2 && (req.includes(userSkill) || reqBase.includes(userSkill) || userSkill.includes(req) || userSkill.includes(reqBase))) {
+    if (userSkill.length > 2 && (req.includes(userSkill) || userSkill.includes(req) || (reqBase.length > 2 && (reqBase.includes(userSkill) || userSkill.includes(reqBase))))) {
       return true;
     }
   }
