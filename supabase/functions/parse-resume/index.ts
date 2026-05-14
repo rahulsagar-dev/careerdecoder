@@ -57,42 +57,53 @@ serve(async (req) => {
     const bytes = new Uint8Array(arrayBuffer);
     let resumeText = "";
 
-    // Try to extract text - for PDF, extract readable text
     try {
-      const textDecoder = new TextDecoder("utf-8", { fatal: false });
-      const rawText = textDecoder.decode(bytes);
+      const headerDecoder = new TextDecoder("utf-8", { fatal: false });
+      const headerSample = headerDecoder.decode(bytes.slice(0, 8));
 
-      // Check if it's a PDF by looking for the PDF header
-      if (rawText.startsWith("%PDF")) {
-        // Extract text between BT/ET blocks and parentheses for basic PDF text
-        const textParts: string[] = [];
-        // Extract strings from PDF content streams
-        const regex = /\(([^)]*)\)/g;
-        let match;
-        while ((match = regex.exec(rawText)) !== null) {
-          const text = match[1].replace(/\\n/g, "\n").replace(/\\\(/g, "(").replace(/\\\)/g, ")");
-          if (text.trim().length > 1) textParts.push(text.trim());
-        }
-        // Also try to get text from streams
-        const streamRegex = /stream\s*([\s\S]*?)endstream/g;
-        while ((match = streamRegex.exec(rawText)) !== null) {
-          const content = match[1];
-          const tjRegex = /\[([^\]]*)\]\s*TJ|(\([^)]*\))\s*Tj/g;
-          let tjMatch;
-          while ((tjMatch = tjRegex.exec(content)) !== null) {
-            const text = (tjMatch[1] || tjMatch[2] || "").replace(/\(([^)]*)\)/g, "$1").replace(/\\[0-9]{3}/g, " ");
-            if (text.trim()) textParts.push(text.trim());
+      if (headerSample.startsWith("%PDF")) {
+        // Use unpdf for proper PDF text extraction (handles compressed streams)
+        try {
+          const { extractText, getDocumentProxy } = await import("https://esm.sh/unpdf@0.12.1");
+          const pdf = await getDocumentProxy(bytes);
+          const { text } = await extractText(pdf, { mergePages: true });
+          resumeText = (Array.isArray(text) ? text.join("\n") : text).replace(/\s+/g, " ").trim();
+        } catch (pdfErr) {
+          console.error("unpdf failed, falling back:", pdfErr);
+          // Fallback to naive regex extraction
+          const rawText = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+          const textParts: string[] = [];
+          const regex = /\(([^)]*)\)/g;
+          let match;
+          while ((match = regex.exec(rawText)) !== null) {
+            const t = match[1].replace(/\\n/g, "\n").replace(/\\\(/g, "(").replace(/\\\)/g, ")");
+            if (t.trim().length > 1) textParts.push(t.trim());
           }
+          resumeText = textParts.join(" ").replace(/\s+/g, " ").trim();
         }
-        resumeText = textParts.join(" ").replace(/\s+/g, " ").trim();
+      } else if (headerSample.startsWith("PK")) {
+        // DOCX (zip) — extract document.xml text
+        try {
+          const { unzipSync, strFromU8 } = await import("https://esm.sh/fflate@0.8.2");
+          const files = unzipSync(bytes);
+          const docXml = files["word/document.xml"];
+          if (docXml) {
+            const xml = strFromU8(docXml);
+            resumeText = xml.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+          }
+        } catch (docxErr) {
+          console.error("DOCX extraction failed:", docxErr);
+        }
       } else {
-        // For DOCX or other text formats, use the raw text
-        // DOCX is a zip file, extract text from XML
-        resumeText = rawText.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+        resumeText = new TextDecoder("utf-8", { fatal: false }).decode(bytes).replace(/\s+/g, " ").trim();
       }
-    } catch {
-      resumeText = "Unable to extract text from file";
+    } catch (e) {
+      console.error("Text extraction error:", e);
+      resumeText = "";
     }
+
+    console.log("Extracted resume text length:", resumeText.length);
+    console.log("Preview:", resumeText.slice(0, 300));
 
     // If text extraction yielded very little, still proceed but note it
     const hasGoodText = resumeText.length > 50;
