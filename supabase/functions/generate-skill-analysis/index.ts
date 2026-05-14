@@ -24,11 +24,32 @@ function normalize(skill: string): string {
   return SYNONYMS[s] || s;
 }
 
+function tokenize(s: string): string[] {
+  return normalize(s)
+    .replace(/[()/,&\-]+/g, " ")
+    .split(/\s+/)
+    .map(t => t.trim())
+    .filter(t => t.length > 1 && !["and", "or", "the", "of", "for", "with", "in"].includes(t));
+}
+
 function getSkillMatch(userSkillsNorm: string[], requiredSkillRaw: string): number {
   const req = normalize(requiredSkillRaw);
   if (userSkillsNorm.includes(req)) return 1;
+
+  // Substring match → user has it
   for (const us of userSkillsNorm) {
-    if (us.includes(req) || req.includes(us)) return 0.5;
+    if (us === req) return 1;
+    if (us.includes(req) || req.includes(us)) return 1;
+  }
+
+  // Token-based overlap (handles "Data Visualization (Tableau/PowerBI)" vs "Data Visualization")
+  const reqTokens = tokenize(requiredSkillRaw);
+  const userTokenSet = new Set(userSkillsNorm.flatMap(tokenize));
+  if (reqTokens.length > 0) {
+    const covered = reqTokens.filter(t => userTokenSet.has(t)).length;
+    const ratio = covered / reqTokens.length;
+    if (ratio >= 0.6) return 1;
+    if (ratio >= 0.3) return 0.5;
   }
   return 0;
 }
