@@ -57,42 +57,53 @@ serve(async (req) => {
     const bytes = new Uint8Array(arrayBuffer);
     let resumeText = "";
 
-    // Try to extract text - for PDF, extract readable text
     try {
-      const textDecoder = new TextDecoder("utf-8", { fatal: false });
-      const rawText = textDecoder.decode(bytes);
+      const headerDecoder = new TextDecoder("utf-8", { fatal: false });
+      const headerSample = headerDecoder.decode(bytes.slice(0, 8));
 
-      // Check if it's a PDF by looking for the PDF header
-      if (rawText.startsWith("%PDF")) {
-        // Extract text between BT/ET blocks and parentheses for basic PDF text
-        const textParts: string[] = [];
-        // Extract strings from PDF content streams
-        const regex = /\(([^)]*)\)/g;
-        let match;
-        while ((match = regex.exec(rawText)) !== null) {
-          const text = match[1].replace(/\\n/g, "\n").replace(/\\\(/g, "(").replace(/\\\)/g, ")");
-          if (text.trim().length > 1) textParts.push(text.trim());
-        }
-        // Also try to get text from streams
-        const streamRegex = /stream\s*([\s\S]*?)endstream/g;
-        while ((match = streamRegex.exec(rawText)) !== null) {
-          const content = match[1];
-          const tjRegex = /\[([^\]]*)\]\s*TJ|(\([^)]*\))\s*Tj/g;
-          let tjMatch;
-          while ((tjMatch = tjRegex.exec(content)) !== null) {
-            const text = (tjMatch[1] || tjMatch[2] || "").replace(/\(([^)]*)\)/g, "$1").replace(/\\[0-9]{3}/g, " ");
-            if (text.trim()) textParts.push(text.trim());
+      if (headerSample.startsWith("%PDF")) {
+        // Use unpdf for proper PDF text extraction (handles compressed streams)
+        try {
+          const { extractText, getDocumentProxy } = await import("https://esm.sh/unpdf@0.12.1");
+          const pdf = await getDocumentProxy(bytes);
+          const { text } = await extractText(pdf, { mergePages: true });
+          resumeText = (Array.isArray(text) ? text.join("\n") : text).replace(/\s+/g, " ").trim();
+        } catch (pdfErr) {
+          console.error("unpdf failed, falling back:", pdfErr);
+          // Fallback to naive regex extraction
+          const rawText = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+          const textParts: string[] = [];
+          const regex = /\(([^)]*)\)/g;
+          let match;
+          while ((match = regex.exec(rawText)) !== null) {
+            const t = match[1].replace(/\\n/g, "\n").replace(/\\\(/g, "(").replace(/\\\)/g, ")");
+            if (t.trim().length > 1) textParts.push(t.trim());
           }
+          resumeText = textParts.join(" ").replace(/\s+/g, " ").trim();
         }
-        resumeText = textParts.join(" ").replace(/\s+/g, " ").trim();
+      } else if (headerSample.startsWith("PK")) {
+        // DOCX (zip) — extract document.xml text
+        try {
+          const { unzipSync, strFromU8 } = await import("https://esm.sh/fflate@0.8.2");
+          const files = unzipSync(bytes);
+          const docXml = files["word/document.xml"];
+          if (docXml) {
+            const xml = strFromU8(docXml);
+            resumeText = xml.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+          }
+        } catch (docxErr) {
+          console.error("DOCX extraction failed:", docxErr);
+        }
       } else {
-        // For DOCX or other text formats, use the raw text
-        // DOCX is a zip file, extract text from XML
-        resumeText = rawText.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+        resumeText = new TextDecoder("utf-8", { fatal: false }).decode(bytes).replace(/\s+/g, " ").trim();
       }
-    } catch {
-      resumeText = "Unable to extract text from file";
+    } catch (e) {
+      console.error("Text extraction error:", e);
+      resumeText = "";
     }
+
+    console.log("Extracted resume text length:", resumeText.length);
+    console.log("Preview:", resumeText.slice(0, 300));
 
     // If text extraction yielded very little, still proceed but note it
     const hasGoodText = resumeText.length > 50;
@@ -104,11 +115,20 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = `You are a professional resume parser. Extract structured data from the resume text provided. Be accurate and extract only real information present in the resume. Normalize skill names (use "React" not "reactjs", "JavaScript" not "javascript", "Node.js" not "nodejs"). Remove duplicates. If certain information is not found, return empty arrays.`;
+    const systemPrompt = `You are a professional resume parser. Extract structured data ONLY from the resume text provided.
+
+CRITICAL RULES:
+- Extract ONLY skills, technologies, and information explicitly mentioned in the resume text below.
+- DO NOT invent, assume, hallucinate, or add common skills (e.g. don't add "React" or "Node.js" unless the resume literally mentions them).
+- If the resume mentions "Excel, SQL, Python, Tableau", return EXACTLY those — not React, Node.js, AWS, Docker, etc.
+- Normalize casing only (e.g. "javascript" → "JavaScript", "power bi" → "Power BI"). Do not translate or substitute skills.
+- Split combined entries: "Python (Pandas, NumPy)" → ["Python", "Pandas", "NumPy"]. "Microsoft Excel, SQL" → ["Microsoft Excel", "SQL"].
+- Include both Technical and Soft skills if present.
+- If a section (experience/projects) is not present, return an empty array.`;
 
     const userPrompt = hasGoodText
-      ? `Parse this resume and extract structured data:\n\n${resumeText.slice(0, 8000)}`
-      : `The resume text could not be fully extracted (it may be a scanned PDF). Based on what is available, extract what you can. The user has these existing skills: ${JSON.stringify(profile.skills || [])}. Resume text fragment:\n\n${resumeText.slice(0, 4000)}`;
+      ? `Parse this resume text. Return ONLY what is actually written here:\n\n---RESUME TEXT START---\n${resumeText.slice(0, 12000)}\n---RESUME TEXT END---`
+      : `The resume text extraction yielded very little content. Return empty arrays rather than guessing. Available text:\n\n${resumeText.slice(0, 4000)}`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
