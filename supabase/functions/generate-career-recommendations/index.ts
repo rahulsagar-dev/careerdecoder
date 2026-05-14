@@ -333,7 +333,7 @@ Be specific and realistic. Return your response by calling the provided function
     }
 
     // Build extended response with skill_gap_details per career
-    const extendedRecommendations = (inserted || []).map((rec: any, i: number) => {
+    const extendedRecommendations = (inserted || []).map((rec: Record<string, unknown>, i: number) => {
       const career = careers[i];
       if (!career) return rec;
       const { matchedSkills, skillGapDetails } = computeScore(userSkills, career);
