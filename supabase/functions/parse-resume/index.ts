@@ -115,11 +115,20 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = `You are a professional resume parser. Extract structured data from the resume text provided. Be accurate and extract only real information present in the resume. Normalize skill names (use "React" not "reactjs", "JavaScript" not "javascript", "Node.js" not "nodejs"). Remove duplicates. If certain information is not found, return empty arrays.`;
+    const systemPrompt = `You are a professional resume parser. Extract structured data ONLY from the resume text provided.
+
+CRITICAL RULES:
+- Extract ONLY skills, technologies, and information explicitly mentioned in the resume text below.
+- DO NOT invent, assume, hallucinate, or add common skills (e.g. don't add "React" or "Node.js" unless the resume literally mentions them).
+- If the resume mentions "Excel, SQL, Python, Tableau", return EXACTLY those — not React, Node.js, AWS, Docker, etc.
+- Normalize casing only (e.g. "javascript" → "JavaScript", "power bi" → "Power BI"). Do not translate or substitute skills.
+- Split combined entries: "Python (Pandas, NumPy)" → ["Python", "Pandas", "NumPy"]. "Microsoft Excel, SQL" → ["Microsoft Excel", "SQL"].
+- Include both Technical and Soft skills if present.
+- If a section (experience/projects) is not present, return an empty array.`;
 
     const userPrompt = hasGoodText
-      ? `Parse this resume and extract structured data:\n\n${resumeText.slice(0, 8000)}`
-      : `The resume text could not be fully extracted (it may be a scanned PDF). Based on what is available, extract what you can. The user has these existing skills: ${JSON.stringify(profile.skills || [])}. Resume text fragment:\n\n${resumeText.slice(0, 4000)}`;
+      ? `Parse this resume text. Return ONLY what is actually written here:\n\n---RESUME TEXT START---\n${resumeText.slice(0, 12000)}\n---RESUME TEXT END---`
+      : `The resume text extraction yielded very little content. Return empty arrays rather than guessing. Available text:\n\n${resumeText.slice(0, 4000)}`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
