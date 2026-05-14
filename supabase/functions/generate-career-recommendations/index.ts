@@ -16,22 +16,44 @@ const SYNONYMS: Record<string, string> = {
   "c sharp": "c#", csharp: "c#", postgres: "postgresql", mongo: "mongodb",
   k8s: "kubernetes", aws: "amazon web services", gcp: "google cloud platform",
   dl: "deep learning", nlp: "natural language processing", cv: "computer vision",
+  powerbi: "power bi", "power-bi": "power bi", "data visualisation": "data visualization",
   oop: "object oriented programming", ci: "continuous integration",
   cd: "continuous deployment", "ci/cd": "continuous integration",
   dsa: "data structures", ds: "data structures", html5: "html", css3: "css", scss: "sass",
 };
 
 function normalize(skill: string): string {
-  const s = skill.toLowerCase().trim();
+  const s = skill.toLowerCase().trim().replace(/power\s*bi/g, "power bi").replace(/[,&/|+]+/g, " ").replace(/\s+/g, " ");
   return SYNONYMS[s] || s;
+}
+
+function tokenize(skill: string): string[] {
+  return normalize(skill)
+    .replace(/[()\-–—:]+/g, " ")
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length > 1 && !["and", "or", "the", "of", "for", "with", "in"].includes(token));
 }
 
 /** Returns 1 (exact), 0.5 (partial), 0 (none) */
 function getSkillMatch(userSkillsNorm: string[], requiredSkillRaw: string): number {
   const req = normalize(requiredSkillRaw);
+  const reqBase = normalize(requiredSkillRaw.replace(/\([^)]*\)/g, "").trim());
   if (userSkillsNorm.includes(req)) return 1;
+  if (reqBase && userSkillsNorm.includes(reqBase)) return 1;
   for (const us of userSkillsNorm) {
-    if (us.includes(req) || req.includes(us)) return 0.5;
+    if (us === req || us === reqBase) return 1;
+    if (us.length > 2 && (req.includes(us) || us.includes(req) || (reqBase.length > 2 && (reqBase.includes(us) || us.includes(reqBase))))) return 1;
+  }
+
+  const reqTokens = tokenize(requiredSkillRaw);
+  const reqBaseTokens = tokenize(requiredSkillRaw.replace(/\([^)]*\)/g, "").trim());
+  const userTokenSet = new Set(userSkillsNorm.flatMap(tokenize));
+  if (reqBaseTokens.length > 0 && reqBaseTokens.every((token) => userTokenSet.has(token))) return 1;
+  if (reqTokens.length > 0) {
+    const ratio = reqTokens.filter((token) => userTokenSet.has(token)).length / reqTokens.length;
+    if (ratio >= 0.6) return 1;
+    if (ratio >= 0.3) return 0.5;
   }
   return 0;
 }
@@ -311,7 +333,7 @@ Be specific and realistic. Return your response by calling the provided function
     }
 
     // Build extended response with skill_gap_details per career
-    const extendedRecommendations = (inserted || []).map((rec: any, i: number) => {
+    const extendedRecommendations = (inserted || []).map((rec: Record<string, unknown>, i: number) => {
       const career = careers[i];
       if (!career) return rec;
       const { matchedSkills, skillGapDetails } = computeScore(userSkills, career);

@@ -47,6 +47,56 @@ const iconBox = "w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
 
 /* ---------- helpers ---------- */
 
+const SKILL_SYNONYMS: Record<string, string> = {
+  js: "javascript",
+  ts: "typescript",
+  py: "python",
+  powerbi: "power bi",
+  "power-bi": "power bi",
+  "data visualisation": "data visualization",
+};
+
+function normalizeSkill(skill: string): string {
+  const cleaned = skill
+    .toLowerCase()
+    .trim()
+    .replace(/power\s*bi/g, "power bi")
+    .replace(/[,&/|+]+/g, " ")
+    .replace(/\s+/g, " ");
+  return SKILL_SYNONYMS[cleaned] || cleaned;
+}
+
+function tokenizeSkill(skill: string): string[] {
+  return normalizeSkill(skill)
+    .replace(/[()\-–—:]+/g, " ")
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length > 1 && !["and", "or", "the", "of", "for", "with", "in"].includes(token));
+}
+
+function skillMatches(userSkills: string[], requiredSkill: string): boolean {
+  const req = normalizeSkill(requiredSkill);
+  const reqBase = normalizeSkill(requiredSkill.replace(/\([^)]*\)/g, "").trim());
+  const userNorm = userSkills.map(normalizeSkill);
+
+  if (userNorm.includes(req) || (reqBase && userNorm.includes(reqBase))) return true;
+
+  for (const userSkill of userNorm) {
+    if (userSkill.length > 2 && (req.includes(userSkill) || userSkill.includes(req) || (reqBase.length > 2 && (reqBase.includes(userSkill) || userSkill.includes(reqBase))))) {
+      return true;
+    }
+  }
+
+  const reqTokens = tokenizeSkill(requiredSkill);
+  const reqBaseTokens = tokenizeSkill(requiredSkill.replace(/\([^)]*\)/g, "").trim());
+  const userTokenSet = new Set(userSkills.flatMap(tokenizeSkill));
+  const baseCovered = reqBaseTokens.length > 0 && reqBaseTokens.every((token) => userTokenSet.has(token));
+  if (baseCovered) return true;
+
+  const covered = reqTokens.filter((token) => userTokenSet.has(token)).length;
+  return reqTokens.length > 0 && covered / reqTokens.length >= 0.6;
+}
+
 function classifyPriority(skill: string, requiredSkills: string[]): "high" | "medium" | "optional" {
   const idx = requiredSkills.findIndex((s) => s.toLowerCase() === skill.toLowerCase());
   if (idx < requiredSkills.length * 0.33) return "high";
@@ -110,19 +160,19 @@ const SkillAnalysisPage = () => {
     [careers, selectedCareerId],
   );
 
-  const userSkillsLower = useMemo(
-    () => (profile?.skills || []).map((s) => s.toLowerCase()),
+  const userSkills = useMemo(
+    () => profile?.skills || [],
     [profile],
   );
 
   const { matchedSkills, missingSkills, matchScore } = useMemo(() => {
     if (!selectedCareer) return { matchedSkills: [] as string[], missingSkills: [] as string[], matchScore: 0 };
     const required = (selectedCareer.required_skills || []);
-    const matched = required.filter((s) => userSkillsLower.includes(s.toLowerCase()));
-    const missing = required.filter((s) => !userSkillsLower.includes(s.toLowerCase()));
+    const matched = required.filter((s) => skillMatches(userSkills, s));
+    const missing = required.filter((s) => !skillMatches(userSkills, s));
     const score = required.length > 0 ? Math.round((matched.length / required.length) * 100) : 0;
     return { matchedSkills: matched, missingSkills: missing, matchScore: score };
-  }, [selectedCareer, userSkillsLower]);
+  }, [selectedCareer, userSkills]);
 
   const topSkillsToLearn = useMemo(() => {
     if (!selectedCareer) return [];
@@ -218,7 +268,7 @@ const SkillAnalysisPage = () => {
                 <SelectContent>
                   {careers.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
-                      {c.career_title} — {c.match_score}% match
+                      {c.career_title} — {c.required_skills?.length ? Math.round((c.required_skills.filter((skill) => skillMatches(userSkills, skill)).length / c.required_skills.length) * 100) : c.match_score}% match
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -288,7 +338,7 @@ const SkillAnalysisPage = () => {
               {(profile?.skills || []).length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {(profile?.skills || []).map((skill) => {
-                    const isMatched = matchedSkills.some((m) => m.toLowerCase() === skill.toLowerCase());
+                    const isMatched = matchedSkills.some((m) => skillMatches([skill], m));
                     const level = proficiencyLevel(skill);
                     return (
                       <Badge
