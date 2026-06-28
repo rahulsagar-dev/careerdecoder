@@ -64,7 +64,8 @@ serve(async (req) => {
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
     );
 
     const token = authHeader.replace("Bearer ", "");
@@ -72,8 +73,13 @@ serve(async (req) => {
     if (authError || !user) throw new Error("Not authenticated");
 
     const { role, user_skills } = await req.json();
-    if (!role || typeof role !== "string" || role.trim().length < 2) {
-      return new Response(JSON.stringify({ error: "Invalid role" }), {
+    if (!role || typeof role !== "string" || role.trim().length < 2 || role.length > 100) {
+      return new Response(JSON.stringify({ error: "Invalid role (2-100 characters required)" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (user_skills !== undefined && (!Array.isArray(user_skills) || user_skills.length > 100 || user_skills.some((s: unknown) => typeof s !== "string" || s.length > 100))) {
+      return new Response(JSON.stringify({ error: "Invalid user_skills (max 100 items, each up to 100 chars)" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
