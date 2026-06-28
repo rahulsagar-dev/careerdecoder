@@ -30,6 +30,13 @@ serve(async (req) => {
 
     const { missing_skills, career_title } = await req.json();
 
+    if (career_title !== undefined && (typeof career_title !== "string" || career_title.length > 200)) {
+      return new Response(JSON.stringify({ error: "career_title must be a string up to 200 characters" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (missing_skills !== undefined && (!Array.isArray(missing_skills) || missing_skills.length > 50 || missing_skills.some((s: unknown) => typeof s !== "string" || s.length > 100))) {
+      return new Response(JSON.stringify({ error: "missing_skills must be an array of up to 50 strings (each up to 100 chars)" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const { data: profile } = await supabase.from("profiles").select("*").eq("id", userId).single();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");

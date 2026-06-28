@@ -158,8 +158,11 @@ serve(async (req) => {
 
     const { career_title, missing_skills } = await req.json();
 
-    if (!career_title) {
-      return new Response(JSON.stringify({ error: "career_title is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!career_title || typeof career_title !== "string" || career_title.length > 200) {
+      return new Response(JSON.stringify({ error: "career_title is required (string up to 200 characters)" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (missing_skills !== undefined && (!Array.isArray(missing_skills) || missing_skills.length > 50 || missing_skills.some((s: unknown) => typeof s !== "string" || s.length > 100))) {
+      return new Response(JSON.stringify({ error: "missing_skills must be an array of up to 50 strings (each up to 100 chars)" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const { data: profile } = await supabase.from("profiles").select("*").eq("id", userId).single();
