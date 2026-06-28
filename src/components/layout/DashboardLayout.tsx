@@ -11,7 +11,6 @@ import {
   BarChart3,
   BookOpen,
   Route,
-  Briefcase,
   FolderKanban,
   Hash,
   Github,
