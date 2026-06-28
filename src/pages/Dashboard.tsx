@@ -24,7 +24,6 @@ import {
   BarChart3,
   BookOpen,
   FolderKanban,
-  Briefcase,
   Heart,
   ArrowRight,
   CheckCircle2,
