@@ -210,7 +210,8 @@ IMPORTANT: After your response, you MUST end with a JSON block on a new line in 
         weak_topics: newWeakTopics,
         follow_up_count: meta.is_follow_up ? followUpCount + 1 : followUpCount,
       })
-      .eq("id", session_id);
+      .eq("id", session_id)
+      .eq("user_id", user.id);
 
     // Store AI message (clean, without meta)
     await supabase.from("interview_messages").insert({
