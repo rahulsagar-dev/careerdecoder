@@ -149,7 +149,8 @@ Evaluate across 5 dimensions. Be honest and specific — reference actual answer
     await supabase
       .from("interview_sessions")
       .update({ score, feedback })
-      .eq("id", session_id);
+      .eq("id", session_id)
+      .eq("user_id", user.id);
 
     return new Response(JSON.stringify({ score, feedback }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
