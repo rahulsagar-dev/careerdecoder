@@ -62,7 +62,6 @@ const INSIGHT_ITEMS = [
   { title: "Skill Gaps", url: "#skill-gaps", icon: BarChart3 },
   { title: "Learning Roadmap", url: "#learning-roadmap", icon: BookOpen },
   { title: "Projects", url: "#projects", icon: FolderKanban },
-  { title: "Internships", url: "#internships", icon: Briefcase },
 ];
 
 function SidebarNav() {

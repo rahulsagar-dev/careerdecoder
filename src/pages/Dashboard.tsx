@@ -367,16 +367,6 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Internships - Coming Soon */}
-      <Card id="internships" className="rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border">
-        <CardHeader className="flex flex-row items-center gap-3 pb-4">
-          <div className={`${iconContainer} bg-primary/10`}><Briefcase className="h-5 w-5 text-primary" /></div>
-          <CardTitle className="text-lg font-semibold">Internships</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <EmptyState icon={Briefcase} text="Internship recommendations coming soon" />
-        </CardContent>
-      </Card>
     </DashboardLayout>
   );
 };
