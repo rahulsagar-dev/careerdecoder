@@ -228,10 +228,10 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
-    const { parsed_data, career_title, required_skills, missing_skills } = await req.json();
-
-    if (!parsed_data) {
-      return new Response(JSON.stringify({ error: "No parsed resume data provided" }), {
+    const body = await req.json().catch(() => ({}));
+    const career_title: string = typeof body?.career_title === "string" ? body.career_title : "General";
+    if (career_title.length > 200) {
+      return new Response(JSON.stringify({ error: "career_title too long (max 200 chars)" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -243,16 +243,58 @@ serve(async (req) => {
       });
     }
 
+    // ── Re-parse resume server-side (do NOT trust client-supplied parsed data) ──
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const parseRes = await fetch(`${supabaseUrl}/functions/v1/parse-resume`, {
+      method: "POST",
+      headers: {
+        Authorization: authHeader,
+        apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
+        "Content-Type": "application/json",
+      },
+      body: "{}",
+    });
+    if (!parseRes.ok) {
+      const errText = await parseRes.text();
+      console.error("parse-resume error:", parseRes.status, errText);
+      return new Response(JSON.stringify({ error: "Failed to parse resume server-side" }), {
+        status: parseRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const parseJson = await parseRes.json();
+    const parsed_data = parseJson?.parsed;
+    if (!parsed_data || typeof parsed_data !== "object") {
+      return new Response(JSON.stringify({ error: "Resume parse returned no data" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Derive required/missing skills from DB (not from client) ──
+    let required_skills: string[] = [];
+    let missing_skills: string[] = [];
+    const { data: careerRow } = await supabase
+      .from("career_recommendations")
+      .select("required_skills, missing_skills")
+      .eq("user_id", userId)
+      .eq("career_title", career_title)
+      .order("match_score", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (careerRow) {
+      required_skills = (careerRow.required_skills as string[]) || [];
+      missing_skills = (careerRow.missing_skills as string[]) || [];
+    }
+
     // ── Compute industry alignment score ──
     const industryAlignmentScore = computeIndustryAlignment(
       parsed_data.extracted_skills || [],
       parsed_data.tech_stack || [],
-      career_title || "General",
+      career_title,
     );
 
     // ── Build recommended learning path ──
     const userSkillsNorm = (parsed_data.extracted_skills || []).map(normalize);
-    const recommendedLearningPath = buildLearningPath(missing_skills || [], userSkillsNorm);
+    const recommendedLearningPath = buildLearningPath(missing_skills, userSkillsNorm);
 
     const systemPrompt = `You are an expert ATS (Applicant Tracking System) resume evaluator. Score the resume based on these weighted criteria:
 - Keyword Match (30%): How well do the resume skills match the required skills for the target career?
