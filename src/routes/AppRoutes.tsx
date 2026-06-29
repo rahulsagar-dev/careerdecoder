@@ -18,6 +18,9 @@ import MarketIntelligencePage from "@/pages/MarketIntelligencePage";
 import CareerPathPage from "@/pages/CareerPathPage";
 import CareerReportPage from "@/pages/CareerReportPage";
 import AnalyticsPage from "@/pages/AnalyticsPage";
+import Support from "@/pages/Support";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import TermsOfService from "@/pages/TermsOfService";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 
@@ -28,6 +31,10 @@ const AppRoutes = () => (
     <Route path="/signup" element={<Signup />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/reset-password" element={<ResetPassword />} />
+    <Route path="/support" element={<Support />} />
+    <Route path="/help" element={<Support />} />
+    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+    <Route path="/terms-of-service" element={<TermsOfService />} />
     <Route path="/profile/setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
