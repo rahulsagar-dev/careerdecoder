@@ -4,6 +4,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/context/AuthContext";
+import { CookieConsentProvider } from "@/context/CookieConsentContext";
+import CookieConsent from "@/components/CookieConsent";
+import HelpButton from "@/components/HelpButton";
 import AppRoutes from "@/routes/AppRoutes";
 
 const queryClient = new QueryClient();
@@ -14,9 +17,13 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
+        <CookieConsentProvider>
+          <AuthProvider>
+            <AppRoutes />
+            <HelpButton />
+            <CookieConsent />
+          </AuthProvider>
+        </CookieConsentProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
