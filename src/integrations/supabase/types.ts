@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      bug_reports: {
+        Row: {
+          browser_info: string | null
+          created_at: string
+          description: string
+          expected_behavior: string | null
+          id: string
+          page_url: string | null
+          screenshot_url: string | null
+          severity: string
+          status: string
+          steps_to_reproduce: string | null
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          browser_info?: string | null
+          created_at?: string
+          description: string
+          expected_behavior?: string | null
+          id?: string
+          page_url?: string | null
+          screenshot_url?: string | null
+          severity?: string
+          status?: string
+          steps_to_reproduce?: string | null
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          browser_info?: string | null
+          created_at?: string
+          description?: string
+          expected_behavior?: string | null
+          id?: string
+          page_url?: string | null
+          screenshot_url?: string | null
+          severity?: string
+          status?: string
+          steps_to_reproduce?: string | null
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       career_recommendations: {
         Row: {
           career_title: string
@@ -47,6 +92,30 @@ export type Database = {
           required_skills?: string[] | null
           salary_range?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      feedback: {
+        Row: {
+          context: string
+          created_at: string
+          id: string
+          rating: string
+          user_id: string | null
+        }
+        Insert: {
+          context: string
+          created_at?: string
+          id?: string
+          rating: string
+          user_id?: string | null
+        }
+        Update: {
+          context?: string
+          created_at?: string
+          id?: string
+          rating?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -503,6 +572,39 @@ export type Database = {
           skill_distribution?: Json | null
           total_skills?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      support_tickets: {
+        Row: {
+          category: string
+          created_at: string
+          email: string
+          id: string
+          message: string
+          status: string
+          subject: string
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          status?: string
+          subject: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          status?: string
+          subject?: string
+          user_id?: string | null
         }
         Relationships: []
       }
