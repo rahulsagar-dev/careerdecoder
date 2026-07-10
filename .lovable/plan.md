@@ -1,47 +1,132 @@
-## Issues found
+## Payments Plan — Stripe + Razorpay with Geo Routing
 
-1. **"Failed to create profile"** — `ProfileSetup` always does INSERT. The logged-in user (`17simranrajpoot@gmail.com` → Kajal Rajpoot) already has a profile row, so INSERT throws a duplicate-key error. There is no guard that detects an existing profile and redirects.
+### Approach
 
-2. **No "Go back" / update path for existing users** — Once a profile exists, ProfileSetup has no exit, and there is no way to use this 5-step wizard to *update* an existing profile.
+Since your project uses external Supabase (not Lovable Cloud), Lovable's built-in payments won't work. Instead, we'll build a BYOK (bring-your-own-key) setup using edge functions — you keep your current Supabase, and I integrate both providers manually.
 
-3. **Resume "View Resume" link broken (404 "Bucket not found")** — Two separate problems combined:
-   - The `resumes` bucket is **private**, but old data has a hard-coded **public** URL (`/storage/v1/object/public/resumes/...`) that returns 404.
-   - New uploads now save just the file *path* (e.g. `userId/resume.pdf`), but `Profile.tsx` renders it directly inside `href`, which is also not a valid URL for a private bucket.
+**Routing rule:** Detect user location → India goes to Razorpay (INR, UPI, cards, netbanking), everyone else goes to Stripe (USD/EUR, cards). One unified `subscriptions` table keeps state in sync regardless of provider.
 
-4. **Skill ↔ job-post comparison broken (Market Position = 0%)** — `MarketIntelligencePage.generate()` calls `marketService.generateInsights(role)` **without passing the user's skills**, so the edge function compares against an empty array → coverage = 0 → score = 0.
+---
 
-## Plan
+### 1. Pricing model (Free vs Pro)
 
-### A. Fix ProfileSetup for existing users
-- On mount, fetch existing profile.
-  - If a profile exists → pre-fill the form from it and switch to **update mode** (`profileService.updateProfile` instead of `createProfile`).
-  - Update title to "Update your profile" and submit button to "Save changes".
-- Add a **"Back to Dashboard"** button in the header of `/profile/setup` (always visible) so existing users can leave the wizard at any time.
-- Make Step 4 resume upload optional in update mode — keep existing resume if no new file uploaded.
+| Feature | Free | Pro |
+|---|---|---|
+| Career Recommendations | 1 generation | Unlimited |
+| Resume Analysis | 2 / month | Unlimited |
+| Skill Gap Analysis | 2 / month | Unlimited |
+| GitHub Analysis | 1 / month | Unlimited |
+| Interview Simulator | 3 sessions / month | Unlimited |
+| Career Report (PDF export) | ❌ | ✅ |
+| Market Intelligence | Basic | Full insights |
+| Learning Roadmap | 1 active | Unlimited |
 
-### B. Fix resume link (private bucket → signed URL)
-- Add `profileService.getResumeSignedUrl(pathOrUrl)` that:
-  - If value looks like a full Supabase public URL, extract the object path after `/resumes/`.
-  - Call `supabase.storage.from("resumes").createSignedUrl(path, 3600)` and return the signed URL.
-- In `Profile.tsx`, when user clicks "View Resume", resolve a fresh signed URL on click and open it in a new tab. Show a toast if it fails.
-- This handles both the legacy bad public URL and new clean paths without a migration.
+Pricing (suggested — final numbers up to you):
+- Stripe: **$9.99/month** or **$79/year** (2 months free)
+- Razorpay: **₹499/month** or **₹3999/year**
 
-### C. Pass user skills to Market Intelligence
-- In `MarketIntelligencePage`, on mount load the user's profile once via `profileService.getProfile()` and store `skills`.
-- Pass `profile.skills` into `marketService.generateInsights(role, skills)` so the edge function can compute proper coverage / matched skills / market position score.
-- Show a small hint "Comparing against N of your skills" under the input.
+---
 
-### D. No DB / RLS / bucket changes required
-- RLS on `profiles` is correct (`auth.uid() = id` for SELECT/INSERT/UPDATE).
-- Storage policies on the `resumes` bucket are correct for private access; the bucket stays private and we only switch the frontend to signed URLs.
+### 2. Database changes (one migration)
 
-## Files to change
+New tables:
+- **`subscriptions`** — `user_id`, `provider` ('stripe' | 'razorpay'), `provider_customer_id`, `provider_subscription_id`, `plan` ('free' | 'pro'), `status` ('active' | 'canceled' | 'past_due' | 'trialing'), `current_period_end`, `cancel_at_period_end`, timestamps. RLS: user reads own, service_role writes.
+- **`usage_counters`** — `user_id`, `feature`, `count`, `period_start` (monthly reset). RLS: user reads own, service_role writes.
+- **`payment_events`** — audit log of every webhook event (`provider`, `event_type`, `payload`, `processed_at`). service_role only.
 
-- `src/pages/ProfileSetup.tsx` — load existing profile, branch insert vs update, add "Back to Dashboard" button.
-- `src/services/profileService.ts` — add `getResumeSignedUrl()`.
-- `src/pages/Profile.tsx` — use signed URL when opening the resume.
-- `src/pages/MarketIntelligencePage.tsx` — load profile skills and pass them into `generateInsights`.
+Every user auto-gets a `free` row on signup (via existing profile trigger extension).
 
-## Out of scope (not changed unless you ask)
-- Edge function `generate-market-insights` logic (already accepts `user_skills`; we just need to send them).
-- Database schema and storage bucket visibility.
+---
+
+### 3. Edge functions (6 new)
+
+| Function | Purpose |
+|---|---|
+| `detect-region` | Reads request IP via CF headers → returns `{ currency, provider }`. Fallback to browser locale. |
+| `create-stripe-checkout` | Creates Stripe Checkout Session for Pro monthly/yearly. Returns URL. |
+| `create-razorpay-order` | Creates Razorpay Subscription. Returns subscription_id + key for client SDK. |
+| `stripe-webhook` | Handles `checkout.session.completed`, `customer.subscription.updated/deleted`, `invoice.payment_failed`. Signature-verified. |
+| `razorpay-webhook` | Handles `subscription.activated/charged/cancelled/halted`. HMAC-verified. |
+| `check-usage-limit` | Called before AI-heavy features. Returns `{ allowed, remaining, plan }`. Increments counter. |
+
+All webhooks use service_role internally (never exposed to client). Config: `verify_jwt = false` for webhook endpoints only.
+
+---
+
+### 4. Secrets required (I'll request via secure form)
+
+- `STRIPE_SECRET_KEY` (sk_live_… or sk_test_…)
+- `STRIPE_WEBHOOK_SECRET` (whsec_…)
+- `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY` (price IDs from your Stripe dashboard)
+- `RAZORPAY_KEY_ID` (rzp_live_… or rzp_test_…)
+- `RAZORPAY_KEY_SECRET`
+- `RAZORPAY_WEBHOOK_SECRET`
+- `RAZORPAY_PLAN_MONTHLY`, `RAZORPAY_PLAN_YEARLY` (plan IDs)
+
+Publishable Stripe key + Razorpay key_id also stored client-side (safe to expose).
+
+---
+
+### 5. Frontend
+
+New pages/components:
+- **`/pricing`** — Free vs Pro comparison table. Auto-shows ₹ prices to Indian visitors, $ to everyone else. "Upgrade to Pro" button routes to the right provider.
+- **`/billing`** (in Dashboard) — Current plan, renewal date, "Manage subscription" (Stripe Customer Portal link / Razorpay dashboard link), cancel button.
+- **`<UpgradeGate />`** wrapper component — wraps limited features, shows "You've hit your Free limit — Upgrade" modal when `check-usage-limit` returns `allowed: false`.
+- **`<PlanBadge />`** in sidebar footer showing Free/Pro status.
+- Stripe: redirect to Checkout (hosted page — simplest & PCI-safe).
+- Razorpay: embed their JS SDK, open the modal on click, verify payment server-side after success.
+
+New service: `src/services/billingService.ts` — wraps all provider calls + usage checks.
+
+---
+
+### 6. Region detection logic
+
+```text
+1. Edge function reads `cf-ipcountry` / `x-vercel-ip-country` header
+2. If IN → Razorpay (INR)
+3. Else check Accept-Language → if hi-IN/en-IN → Razorpay
+4. Else → Stripe (default USD)
+5. User can override on /pricing page ("Pay in USD instead")
+```
+
+---
+
+### 7. Integration into existing features
+
+Gate these functions with `check-usage-limit` before running:
+- `generate-career-recommendations`
+- `generate-skill-analysis`
+- `analyze-github-profile`
+- `interview-chat` (per session start)
+- `parse-resume` + `score-resume`
+- `generate-career-report` (Pro only, hard gate)
+
+Free users get a friendly upgrade prompt instead of running the AI call.
+
+---
+
+### 8. What you need to do before I build
+
+1. **Create Stripe account** → get secret key + create a Product with monthly/yearly Prices → note the price IDs.
+2. **Create Razorpay account** (KYC required for live mode; test mode works immediately) → create a Plan for monthly + yearly → note plan IDs.
+3. **Set webhook endpoints** (I'll give you the exact URLs after deploy):
+   - Stripe: `https://voydvjkvsathgckzcjgp.supabase.co/functions/v1/stripe-webhook`
+   - Razorpay: `https://voydvjkvsathgckzcjgp.supabase.co/functions/v1/razorpay-webhook`
+4. Paste all 10 secrets into the secure form I'll open.
+
+---
+
+### 9. Build order (once approved)
+
+1. Migration: `subscriptions`, `usage_counters`, `payment_events` + RLS + free-plan seed trigger
+2. Request all secrets
+3. Edge functions: `check-usage-limit` + `detect-region` first (unblocks gating)
+4. Stripe checkout + webhook
+5. Razorpay order + webhook
+6. Frontend: `/pricing`, `/billing`, `<UpgradeGate />`, sidebar badge
+7. Wire `<UpgradeGate />` into the 6 gated features
+8. Test both providers in test mode
+
+Ready to implement when you approve. Want to tweak the pricing or feature-limit split first?
