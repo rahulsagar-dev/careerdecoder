@@ -322,6 +322,36 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_events: {
+        Row: {
+          event_id: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string
+          provider: string
+          user_id: string | null
+        }
+        Insert: {
+          event_id?: string | null
+          event_type: string
+          id?: string
+          payload: Json
+          processed_at?: string
+          provider: string
+          user_id?: string | null
+        }
+        Update: {
+          event_id?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string
+          provider?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           career_goal: string | null
@@ -575,6 +605,51 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          billing_interval: string | null
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          id: string
+          plan: string
+          provider: string
+          provider_customer_id: string | null
+          provider_subscription_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing_interval?: string | null
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: string
+          provider?: string
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing_interval?: string | null
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: string
+          provider?: string
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           category: string
@@ -605,6 +680,36 @@ export type Database = {
           status?: string
           subject?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      usage_counters: {
+        Row: {
+          count: number
+          created_at: string
+          feature: string
+          id: string
+          period_start: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          feature: string
+          id?: string
+          period_start?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          feature?: string
+          id?: string
+          period_start?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
