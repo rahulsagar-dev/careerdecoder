@@ -33,6 +33,8 @@ export const githubService = {
   async analyzeGithubProfile(githubUrl?: string): Promise<{ analysis: GithubAnalysis; repos: RepoAnalysis[] }> {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error("Not authenticated");
+    await gateFeature("github-analysis");
+
 
     const { data, error } = await supabase.functions.invoke("analyze-github-profile", {
       headers: { Authorization: `Bearer ${session.access_token}` },
