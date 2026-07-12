@@ -610,7 +610,9 @@ export type Database = {
           billing_interval: string | null
           cancel_at_period_end: boolean
           created_at: string
+          currency: string
           current_period_end: string | null
+          current_period_start: string | null
           id: string
           plan: string
           provider: string
@@ -624,7 +626,9 @@ export type Database = {
           billing_interval?: string | null
           cancel_at_period_end?: boolean
           created_at?: string
+          currency?: string
           current_period_end?: string | null
+          current_period_start?: string | null
           id?: string
           plan?: string
           provider?: string
@@ -638,7 +642,9 @@ export type Database = {
           billing_interval?: string | null
           cancel_at_period_end?: boolean
           created_at?: string
+          currency?: string
           current_period_end?: string | null
+          current_period_start?: string | null
           id?: string
           plan?: string
           provider?: string
