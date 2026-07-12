@@ -78,6 +78,9 @@ const CareerReportPage = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
+      const { gateFeature } = await import("@/services/featureGate");
+      await gateFeature("career-report");
+
 
       const { data, error } = await supabase.functions.invoke("generate-career-report", {
         headers: { Authorization: `Bearer ${session.access_token}` },
