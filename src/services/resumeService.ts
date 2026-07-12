@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { gateFeature } from "./featureGate";
 
 export interface ResumeExperience {
   role: string;
