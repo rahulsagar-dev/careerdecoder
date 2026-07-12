@@ -21,6 +21,9 @@ import AnalyticsPage from "@/pages/AnalyticsPage";
 import Support from "@/pages/Support";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
+import Pricing from "@/pages/Pricing";
+import Billing from "@/pages/Billing";
+import PaymentSuccess from "@/pages/PaymentSuccess";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 
