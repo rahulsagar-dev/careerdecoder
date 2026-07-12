@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { gateFeature } from "./featureGate";
 
 export interface InterviewSession {
   id: string;
@@ -30,6 +31,8 @@ export const interviewService = {
   async createSession(mode: string, role: string): Promise<InterviewSession> {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error("Not authenticated");
+    await gateFeature("interview-session");
+
 
     const { data, error } = await supabase
       .from("interview_sessions")

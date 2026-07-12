@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { gateFeature } from "./featureGate";
 
 export interface CareerRecommendation {
   id: string;
@@ -27,6 +28,7 @@ export const careerService = {
   async generateRecommendations(): Promise<CareerRecommendation[]> {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error("Not authenticated");
+    await gateFeature("career-recommendations");
 
     const { data, error } = await supabase.functions.invoke("generate-career-recommendations", {
       headers: { Authorization: `Bearer ${session.access_token}` },
@@ -61,6 +63,7 @@ export const careerService = {
   async generateSkillAnalysis(): Promise<SkillAnalysis> {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error("Not authenticated");
+    await gateFeature("skill-analysis");
 
     const { data, error } = await supabase.functions.invoke("generate-skill-analysis", {
       headers: { Authorization: `Bearer ${session.access_token}` },

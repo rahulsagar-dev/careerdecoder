@@ -21,6 +21,9 @@ import AnalyticsPage from "@/pages/AnalyticsPage";
 import Support from "@/pages/Support";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
+import Pricing from "@/pages/Pricing";
+import Billing from "@/pages/Billing";
+import PaymentSuccess from "@/pages/PaymentSuccess";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 
@@ -35,6 +38,9 @@ const AppRoutes = () => (
     <Route path="/help" element={<Support />} />
     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
     <Route path="/terms-of-service" element={<TermsOfService />} />
+    <Route path="/pricing" element={<Pricing />} />
+    <Route path="/payment-success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
+    <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
     <Route path="/profile/setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

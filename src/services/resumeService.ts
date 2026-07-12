@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { gateFeature } from "./featureGate";
 
 export interface ResumeExperience {
   role: string;
@@ -38,6 +39,8 @@ export const resumeService = {
   async parseResume(): Promise<ParsedResume> {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error("Not authenticated");
+    await gateFeature("resume-analysis");
+
 
     const { data, error } = await supabase.functions.invoke("parse-resume", {
       headers: { Authorization: `Bearer ${session.access_token}` },
