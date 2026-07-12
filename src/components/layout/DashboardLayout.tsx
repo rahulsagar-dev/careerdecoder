@@ -20,6 +20,7 @@ import {
   FileText,
   LineChart,
   LifeBuoy,
+  CreditCard,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
@@ -55,6 +56,7 @@ const NAV_ITEMS = [
   { title: "Career Path Graph", url: "/career-path", icon: GitBranch },
   { title: "Career Report", url: "/career-report", icon: FileText },
   { title: "Analytics", url: "/analytics", icon: LineChart },
+  { title: "Billing", url: "/billing", icon: CreditCard },
   { title: "Support", url: "/support", icon: LifeBuoy },
 ];
 
