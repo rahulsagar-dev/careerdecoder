@@ -229,6 +229,10 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
+    // Plan check without incrementing (parse-resume already counts under resume-analysis).
+    const gate = await enforceUsage(userId, "resume-analysis", { increment: false });
+    if (!gate.ok) return new Response(JSON.stringify(gate.body), { status: gate.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
     const body = await req.json().catch(() => ({}));
     const career_title: string = typeof body?.career_title === "string" ? body.career_title : "General";
     if (career_title.length > 200) {
