@@ -29,6 +29,9 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
+    const gate = await enforceUsage(userId, "resume-analysis", { increment: true });
+    if (!gate.ok) return new Response(JSON.stringify(gate.body), { status: gate.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
     // Get profile to find resume URL
     const { data: profile } = await supabase.from("profiles").select("resume_url, skills").eq("id", userId).single();
     if (!profile?.resume_url) {
