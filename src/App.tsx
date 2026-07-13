@@ -7,6 +7,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { CookieConsentProvider } from "@/context/CookieConsentContext";
 import CookieConsent from "@/components/CookieConsent";
 import HelpButton from "@/components/HelpButton";
+import UpgradeModal from "@/components/UpgradeModal";
 import AppRoutes from "@/routes/AppRoutes";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
             <AppRoutes />
             <HelpButton />
             <CookieConsent />
+            <UpgradeModal />
           </AuthProvider>
         </CookieConsentProvider>
       </BrowserRouter>

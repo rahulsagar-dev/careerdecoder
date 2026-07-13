@@ -20,19 +20,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Auth listener — only clear session on explicit SIGNED_OUT / USER_DELETED.
+    // A transient null session on other events (e.g. INITIAL_SESSION with no
+    // stored session, TOKEN_REFRESHED race) must not flip user->null and
+    // cause ProtectedRoute to redirect mid-navigation.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+      (event, newSession) => {
+        if (event === "SIGNED_OUT" || event === "USER_DELETED" as string) {
+          setSession(null);
+          setUser(null);
+        } else if (newSession) {
+          setSession(newSession);
+          setUser(newSession.user);
+        }
         setLoading(false);
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session: existing } }) => {
+      setSession(existing);
+      setUser(existing?.user ?? null);
       setLoading(false);
     });
 
@@ -49,6 +57,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await authService.signOut();
+    setSession(null);
+    setUser(null);
   };
 
   return (
