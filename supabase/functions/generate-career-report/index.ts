@@ -24,6 +24,10 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) throw new Error("Not authenticated");
 
+    const gate = await enforceUsage(user.id, "career-report", { increment: false });
+    if (!gate.ok) return new Response(JSON.stringify(gate.body), { status: gate.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+
     // Fetch all user data
     const [profileRes, careersRes, skillRes, roadmapRes, resumeRes, githubRes, marketRes] = await Promise.allSettled([
       supabase.from("profiles").select("*").eq("id", user.id).single(),
