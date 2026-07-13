@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { githubService, type GithubAnalysis, type RepoAnalysis } from "@/services/githubService";
+import { handleFeatureError } from "@/services/featureGate";
 import { useAuth } from "@/context/AuthContext";
 
 function scoreColor(score: number) {
@@ -74,7 +75,7 @@ const GitHubAnalysisPage = () => {
       setRepos(result.repos);
       toast.success("GitHub portfolio analyzed successfully!");
     } catch (err: any) {
-      toast.error(err.message || "Failed to analyze GitHub profile");
+      handleFeatureError(err, "Failed to analyze GitHub profile");
     } finally {
       setAnalyzing(false);
       setStep("");
