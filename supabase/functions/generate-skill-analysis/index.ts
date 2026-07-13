@@ -331,6 +331,9 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
+    const gate = await enforceUsage(userId, "skill-analysis", { increment: true });
+    if (!gate.ok) return new Response(JSON.stringify(gate.body), { status: gate.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
     const { data: profile } = await supabase.from("profiles").select("skills, career_goal").eq("id", userId).single();
     const userSkills: string[] = profile?.skills || [];
     const userNorm = userSkills.map(normalize);
