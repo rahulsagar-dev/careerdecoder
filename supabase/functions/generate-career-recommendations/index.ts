@@ -180,6 +180,9 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
+    const gate = await enforceUsage(userId, "career-recommendations", { increment: true });
+    if (!gate.ok) return new Response(JSON.stringify(gate.body), { status: gate.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
     const { data: profile, error: profileError } = await supabase
       .from("profiles").select("*").eq("id", userId).single();
 
