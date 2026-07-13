@@ -20,8 +20,13 @@ const LABEL: Record<string, string> = {
   "career-report": "career report",
 };
 
-/** Call before running an AI feature. Throws UpgradeRequiredError if blocked. */
-export async function gateFeature(feature: keyof typeof LABEL, increment = true) {
+/**
+ * Client-side pre-check before running an AI feature.
+ * Pass `increment=false` (default) — the actual increment is done atomically
+ * server-side inside each AI edge function so limits cannot be bypassed.
+ * Throws UpgradeRequiredError if blocked.
+ */
+export async function gateFeature(feature: keyof typeof LABEL, increment = false) {
   const res = await billingService.checkUsage(feature, increment);
   if (!res.allowed) {
     const label = LABEL[feature] || feature;
