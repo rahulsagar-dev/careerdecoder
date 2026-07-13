@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { profileService, ProfileData } from "@/services/profileService";
 import { careerService, CareerRecommendation, SkillAnalysis } from "@/services/careerService";
 import { toast } from "sonner";
+import { handleFeatureError } from "@/services/featureGate";
 import {
   Loader2,
   Target,
@@ -193,7 +194,7 @@ const SkillAnalysisPage = () => {
       setAnalysis(data);
       toast.success("Analysis refreshed!");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to generate analysis");
+      handleFeatureError(err, "Failed to generate analysis");
     } finally {
       setGenerating(false);
     }

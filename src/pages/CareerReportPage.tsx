@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { handleFeatureError } from "@/services/featureGate";
 import ReactMarkdown from "react-markdown";
 import {
   Loader2, Download, FileText, User, Target, Brain, BookOpen, Github,
@@ -93,7 +94,7 @@ const CareerReportPage = () => {
       setScores(data.scores);
       toast.success("Career report generated!");
     } catch (e: any) {
-      toast.error(e.message || "Failed to generate report");
+      handleFeatureError(e, "Failed to generate report");
     } finally {
       setGenerating(false);
     }

@@ -6,6 +6,7 @@ import { resumeService, ResumeAnalysis, ParsedResume } from "@/services/resumeSe
 import { careerService, CareerRecommendation } from "@/services/careerService";
 import { profileService } from "@/services/profileService";
 import { toast } from "sonner";
+import { handleFeatureError } from "@/services/featureGate";
 import {
   Loader2,
   FileText,
@@ -87,7 +88,7 @@ const ResumeAnalysisPage = () => {
       setAnalysis(result);
       toast.success("Resume analysis complete!");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to analyze resume");
+      handleFeatureError(err, "Failed to analyze resume");
     } finally {
       setAnalyzing(false);
       setStep("");

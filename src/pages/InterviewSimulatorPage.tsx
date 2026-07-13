@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { interviewService, InterviewChatResponse } from "@/services/interviewService";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { toast } from "sonner";
+import { handleFeatureError } from "@/services/featureGate";
 import ReactMarkdown from "react-markdown";
 import {
   Loader2, MessageSquare, Send, CheckCircle2, Brain, Users, Briefcase, Trophy,
@@ -66,7 +67,7 @@ const InterviewSimulatorPage = () => {
       setCurrentTopic(aiResponse.topic);
       toast.success("Interview started!");
     } catch (e: any) {
-      toast.error(e.message || "Failed to start interview");
+      handleFeatureError(e, "Failed to start interview");
     } finally {
       setStarting(false);
     }
