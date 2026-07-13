@@ -8,6 +8,7 @@ import { careerService, CareerRecommendation } from "@/services/careerService";
 import { toast } from "sonner";
 import { Loader2, Compass, Sparkles, RefreshCw, ArrowRight } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { handleFeatureError } from "@/services/featureGate";
 
 const iconContainer = "w-10 h-10 rounded-xl flex items-center justify-center shrink-0";
 
@@ -38,7 +39,7 @@ const CareerRecommendations = () => {
       setRecommendations(data);
       toast.success("Career recommendations generated!");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to generate recommendations");
+      handleFeatureError(err, "Failed to generate recommendations");
     } finally {
       setGenerating(false);
     }
