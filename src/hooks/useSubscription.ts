@@ -39,13 +39,13 @@ export function useSubscription(): SubscriptionInfo {
       setState((s) => ({ ...s, loading: false }));
       return;
     }
-    const { data, error, status } = await supabase
+    const { data, error, status: responseStatus } = await supabase
       .from("subscriptions")
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
     console.log("[billing-subscription-load:result]", {
-      status,
+      status: responseStatus,
       errorCode: error?.code ?? null,
       errorMessage: error?.message ?? null,
       hasData: Boolean(data),
