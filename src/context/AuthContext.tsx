@@ -26,6 +26,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // cause ProtectedRoute to redirect mid-navigation.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
+        console.log("[auth-state-change]", {
+          event,
+          hasSession: Boolean(newSession),
+          userId: newSession?.user?.id ?? null,
+          expiresAt: newSession?.expires_at ?? null,
+        });
         if (event === "SIGNED_OUT" || event === "USER_DELETED" as string) {
           setSession(null);
           setUser(null);
@@ -39,6 +45,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Initial session check
     supabase.auth.getSession().then(({ data: { session: existing } }) => {
+      console.log("[auth-get-session]", {
+        hasSession: Boolean(existing),
+        userId: existing?.user?.id ?? null,
+        expiresAt: existing?.expires_at ?? null,
+      });
       setSession(existing);
       setUser(existing?.user ?? null);
       setLoading(false);
