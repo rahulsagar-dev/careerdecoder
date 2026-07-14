@@ -30,15 +30,31 @@ export function useSubscription(): SubscriptionInfo {
   });
 
   const load = useCallback(async () => {
+    console.log("[billing-subscription-load:start]", {
+      hasUser: Boolean(user),
+      userId: user?.id ?? null,
+    });
     if (!user) {
+      console.log("[billing-subscription-load:skip] no user");
       setState((s) => ({ ...s, loading: false }));
       return;
     }
-    const { data } = await supabase
+    const { data, error, status } = await supabase
       .from("subscriptions")
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
+    console.log("[billing-subscription-load:result]", {
+      status,
+      errorCode: error?.code ?? null,
+      errorMessage: error?.message ?? null,
+      hasData: Boolean(data),
+      userId: user.id,
+    });
+    if (error) {
+      setState((s) => ({ ...s, loading: false }));
+      return;
+    }
     const plan = (data?.plan ?? "free") as "free" | "pro";
     const status = data?.status ?? "active";
     setState({
