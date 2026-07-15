@@ -19,6 +19,7 @@ const LABEL: Record<string, string> = {
   "github-analysis": "GitHub analysis",
   "interview-session": "interview simulator",
   "resume-analysis": "resume analysis",
+  "linkedin-analysis": "LinkedIn analysis",
   "career-report": "career report",
 };
 

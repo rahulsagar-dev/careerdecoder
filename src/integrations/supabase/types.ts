@@ -265,6 +265,60 @@ export type Database = {
         }
         Relationships: []
       }
+      linkedin_analysis: {
+        Row: {
+          about_score: number
+          created_at: string
+          experience_score: number
+          headline_score: number
+          id: string
+          keyword_gaps: Json
+          overall_score: number
+          parsed_text: string | null
+          skills_score: number
+          strengths: Json
+          suggestions: Json
+          target_career: string | null
+          updated_at: string
+          user_id: string
+          weaknesses: Json
+        }
+        Insert: {
+          about_score?: number
+          created_at?: string
+          experience_score?: number
+          headline_score?: number
+          id?: string
+          keyword_gaps?: Json
+          overall_score?: number
+          parsed_text?: string | null
+          skills_score?: number
+          strengths?: Json
+          suggestions?: Json
+          target_career?: string | null
+          updated_at?: string
+          user_id: string
+          weaknesses?: Json
+        }
+        Update: {
+          about_score?: number
+          created_at?: string
+          experience_score?: number
+          headline_score?: number
+          id?: string
+          keyword_gaps?: Json
+          overall_score?: number
+          parsed_text?: string | null
+          skills_score?: number
+          strengths?: Json
+          suggestions?: Json
+          target_career?: string | null
+          updated_at?: string
+          user_id?: string
+          weaknesses?: Json
+        }
+        Relationships: []
+      }
       market_data: {
         Row: {
           competition_level: string | null
