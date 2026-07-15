@@ -62,6 +62,11 @@ function looksLikeBusyError(err: unknown): boolean {
 }
 
 
+function looksLikeEmailUnverified(err: unknown): boolean {
+  const msg = (err instanceof Error ? err.message : String(err || "")).toLowerCase();
+  return msg.includes("verify your email");
+}
+
 /**
  * Central error handler for AI feature calls. Opens the upgrade modal on
  * limit / pro-only errors and returns true (caller should skip its own toast).
@@ -71,6 +76,10 @@ export function handleFeatureError(err: unknown, fallback = "Something went wron
   const up = looksLikeUpgradeError(err);
   if (up) {
     requestUpgrade({ feature: up.feature, reason: up.reason });
+    return true;
+  }
+  if (looksLikeEmailUnverified(err)) {
+    toast.error("Please verify your email before using AI features. Check your inbox for the confirmation link.");
     return true;
   }
   if (looksLikeBusyError(err)) {

@@ -38,6 +38,18 @@ export async function enforceUsage(
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  // Require verified email before any AI call. Blocks scripted throwaway accounts.
+  const { data: userInfo } = await admin.auth.admin.getUserById(userId);
+  const u: any = userInfo?.user;
+  const emailConfirmed = !!(u?.email_confirmed_at || u?.confirmed_at);
+  if (!emailConfirmed) {
+    return {
+      ok: false,
+      status: 403,
+      body: { error: "Please verify your email before using AI features.", reason: "email_unverified", feature, plan: "free", limit: 0 },
+    };
+  }
+
   const { data: sub } = await admin
     .from("subscriptions")
     .select("plan,status,current_period_end")
