@@ -1,127 +1,67 @@
+# Plan v2: Resilience Without Quality Loss (Critiques Addressed)
 
-# LinkedIn Analysis Feature — Full Plan
+## Decision (unchanged)
+- **No model downgrades.** Keep current Gemini models.
+- **No Groq.** Same reasons.
 
-Mirrors the existing Resume Analysis + GitHub Analysis patterns. User uploads their own LinkedIn "Save to PDF" export (ToS-safe), we parse it, and generate an AI analysis with strengths, weaknesses, and improvement suggestions.
+## Corrections From v1
 
-## 1. User Flow
+| v1 said | Reality | v2 does |
+|---|---|---|
+| 60s cooldown by user_id | Would serve stale data after a resume/profile edit | Cooldown keyed on **input hash**, not user_id alone |
+| "~500-1000 concurrent users" | Made-up number, unverified | Removed. Capacity is unknown until measured. |
+| One retry after 3s | Fails under sustained rate-limit | Retry once → then queue expensive jobs OR show honest "busy" message for interactive ones |
+| Credit alert | Requires you to be awake | **Auto top-up** (Pro/Business only) — confirmed available in Lovable docs |
+| — | Multi-account abuse not covered | Add signup CAPTCHA + email verification gate before AI unlocks |
+| — | Supabase concurrency limit unknown | Add per-user dedup + monitor logs; escalate to bigger Cloud instance if hit |
 
-1. User navigates to `/linkedin-analysis` (new sidebar entry between Resume Analysis and GitHub Analysis).
-2. Page shows:
-   - Instructions panel: "How to export your LinkedIn PDF" — Profile → **More** → **Save to PDF** (current LinkedIn UI, verified).
-   - Upload dropzone (PDF only, ≤10MB).
-   - Privacy note: "Your LinkedIn PDF is processed to generate this analysis and is not shared with third parties. The file is discarded after parsing unless you enable history."
-3. On upload → `parse-linkedin` edge function extracts text → `generate-linkedin-analysis` edge function produces structured analysis → saved to `linkedin_analysis` table → rendered as cards.
-4. Past analyses list (like Resume Analysis history), with delete option.
-5. Feature is gated behind `check-usage-limit` (`linkedin-analysis`, 1 free/month, unlimited on Pro), enforced server-side via `enforceUsage.ts`.
+## What Will Change
 
-## 2. Database Schema (one migration)
+### 1. Input-hash cooldown (not user_id cooldown)
+- Add an `input_hash TEXT` column to `career_recommendations`, `skill_analysis`, `market_data`, `career_reports`, `resume_analysis`, `linkedin_analysis`.
+- Before calling the AI, compute `SHA-256(JSON.stringify(sortedInputs))` server-side.
+- If a row exists with the same `input_hash` for this user AND is < 5 minutes old → return it, skip the AI call.
+- If input hash differs (user edited profile, uploaded new resume) → always regenerate. No staleness.
+- Result: blocks double-click spam and refresh loops, never blocks a legitimate re-run.
 
-**New table: `linkedin_analysis`**
+### 2. Two-tier failure handling
+- **Interactive features** (`interview-chat`, `evaluate-interview`, `parse-resume`): retry once at 3s → if still 429/5xx, show "AI service is busy, please try again in a minute." No queuing — user is actively waiting.
+- **Expensive async features** (`generate-career-report`, `generate-market-insights`): on second failure, insert into a new `pending_generations` table with status=queued. A follow-up run (cron or on next login) picks them up. UI shows "We'll notify you when ready."
+- Shared handler in `src/services/featureGate.ts` — extend existing `handleFeatureError`.
 
-Fields (domain-specific):
-- `user_id` — owner
-- `headline_score`, `about_score`, `experience_score`, `skills_score`, `overall_score` — 0-100
-- `strengths` — jsonb array
-- `weaknesses` — jsonb array
-- `suggestions` — jsonb array (each with title, description, priority)
-- `keyword_gaps` — jsonb array (missing keywords vs target career)
-- `parsed_text` — text (raw extracted text, for debugging/regeneration)
-- `target_career` — text (optional, from profile)
-- Standard: id, created_at, updated_at
+### 3. Auto top-up (Pro/Business) or alert (Free)
+- I can't set this from code — it's a workspace setting in **Settings → Plans & credit usage**.
+- Recommended config: threshold at 30% of monthly grant, top-up amount = 1 month of expected spend, monthly spend cap = 3× monthly grant (hard ceiling so a runaway bug can't empty your card).
+- On Free plan: fall back to a balance-notification limit (I can set this via credit tools).
 
-**Access rules (RLS):**
-- Users can view/insert/update/delete only their own rows (`auth.uid() = user_id`).
-- `service_role` full access for edge functions.
+### 4. Signup abuse prevention
+- Add **Cloudflare Turnstile** (free, no vendor lock-in) to the signup form. Verifies human before Supabase `signUp` is called.
+- Add **email verification gate**: `profiles.email_verified` boolean; edge functions reject AI calls if false. Supabase already sends verification emails — just enforce it server-side.
+- Optional (later): IP-based signup rate limit in a `pre-signup` edge function — max 3 signups per IP per hour.
 
-**Usage counter:** No schema change — reuses existing `usage_counters` table with `feature = 'linkedin-analysis'`.
+### 5. Concurrency dedup + observability
+- Add a lightweight `active_generations` table: `(user_id, feature, started_at)` with a 2-min TTL.
+- Edge function checks before starting: if a row exists for this user+feature and started < 2 min ago, return 429 immediately with "Already generating, please wait." Prevents a single user from spawning parallel identical jobs.
+- Monitor via edge function logs; if we see repeated 5xx from Supabase (not Gemini), the fix is a bigger Cloud instance, not code.
 
-**No new storage bucket.** PDFs are parsed in-memory in the edge function and never persisted (matches the privacy note). If the user later wants history of the raw file, we can add a private `linkedin-pdfs` bucket in a follow-up.
+## Order Of Work (if you approve)
 
-## 3. Edge Functions
+1. Input-hash cooldown (biggest correctness fix — removes the v1 bug).
+2. Concurrency dedup (`active_generations`).
+3. Signup CAPTCHA + email verification gate.
+4. Two-tier failure handling with `pending_generations` queue.
+5. You configure auto top-up in Settings (5 min, one-time).
 
-Three new functions, all `verify_jwt` default (JWT-required):
+## Explicitly NOT Doing
 
-### `parse-linkedin`
-- Accepts `multipart/form-data` PDF upload.
-- Server-side validation: MIME `application/pdf`, size ≤10MB (matches resume audit).
-- Extracts text using **`unpdf`** (already used in `parse-resume` — Deno-compatible, works in edge runtime). Does NOT use `pdf-parse` (Node-only).
-- Returns `{ text, sections: { headline, about, experience, skills, education } }` — best-effort section splitting via heading regex.
-- Rate limit: enforced via `enforceUsage(userId, 'linkedin-analysis', { increment: false })` — pre-check only, real increment happens in generate step.
+- Model changes.
+- Prompt changes.
+- Groq / second AI provider.
+- Guessing capacity numbers.
+- Anything requiring me to know Supabase's private per-plan concurrency limit.
 
-### `generate-linkedin-analysis`
-- Body: `{ parsedText, sections, targetCareer? }`.
-- Calls `enforceUsage(userId, 'linkedin-analysis', { increment: true })` — atomic server-side gate.
-- Calls Lovable AI (`google/gemini-2.5-flash`) with a structured-output prompt returning:
-  ```
-  { overall_score, headline_score, about_score, experience_score, skills_score,
-    strengths[], weaknesses[], suggestions[{title, description, priority}],
-    keyword_gaps[] }
-  ```
-- Uses the user's profile's target career (from `profiles.target_career` or `career_recommendations`) to tailor keyword gaps.
-- Inserts row into `linkedin_analysis`, returns saved row.
+## What I Cannot Guarantee
 
-### (no third function) 
-Delete/list operations happen via direct Supabase client from the frontend under RLS — matches the pattern used by `resume_analysis`.
-
-## 4. Frontend
-
-### New page: `src/pages/LinkedInAnalysisPage.tsx`
-- Layout matches `ResumeAnalysisPage`:
-  - Header + instructions accordion
-  - Upload card (react-dropzone) with client-side MIME/size check (defense in depth; server is authoritative)
-  - Progress states: uploading → parsing → analyzing → done
-  - Results view: score cards (overall + 4 sub-scores), strengths/weaknesses lists, prioritized suggestions, keyword gaps chips
-  - Past analyses list with delete
-- Wrapped with paywall error handling via `handleFeatureError` from `featureGate.ts` (opens `UpgradeModal` on limit/pro-only).
-
-### New service: `src/services/linkedinService.ts`
-- `uploadAndParse(file)` → invokes `parse-linkedin`
-- `generateAnalysis(parsed, targetCareer)` → invokes `generate-linkedin-analysis`
-- `listAnalyses()`, `deleteAnalysis(id)` → direct Supabase queries
-
-### Route & nav
-- Add `/linkedin-analysis` to `AppRoutes.tsx` under `<ProtectedRoute>`.
-- Add sidebar entry in `DashboardLayout.tsx` between "Resume Analysis" and "GitHub Analysis" (Linkedin icon from lucide-react).
-
-### Feature gating
-- Added to `FREE_LIMITS` in both `check-usage-limit/index.ts` and `_shared/enforceUsage.ts` as `'linkedin-analysis': 1`.
-- Frontend uses `gateFeature('linkedin-analysis')` for UX preview; server enforces atomically.
-
-## 5. Security & Privacy
-
-- Server-side MIME + size validation in `parse-linkedin` (matches recent audit fixes for resume/bug-screenshots).
-- No persistent storage of the raw PDF.
-- RLS on `linkedin_analysis` scoped to `auth.uid() = user_id`.
-- All AI calls server-side; `LOVABLE_API_KEY` never exposed.
-- CORS headers on both new functions.
-
-## 6. Out of Scope (explicit)
-
-- Scraping LinkedIn — forbidden by ToS.
-- Storing the uploaded PDF — deferred until user opts into history.
-- Comparing two users' profiles — not requested.
-
-## 7. Files Touched
-
-**New:**
-- `supabase/functions/parse-linkedin/index.ts`
-- `supabase/functions/generate-linkedin-analysis/index.ts`
-- `src/pages/LinkedInAnalysisPage.tsx`
-- `src/services/linkedinService.ts`
-- 1 migration (creates `linkedin_analysis` table + grants + RLS)
-
-**Modified:**
-- `src/routes/AppRoutes.tsx` — new route
-- `src/components/layout/DashboardLayout.tsx` — sidebar entry
-- `supabase/functions/_shared/enforceUsage.ts` — add limit
-- `supabase/functions/check-usage-limit/index.ts` — add limit
-
-## 8. Verification
-
-- Upload a sample LinkedIn PDF → confirm text extracts and analysis renders.
-- Try uploading a non-PDF → server rejects with 400.
-- Upload as free user twice in a month → second attempt opens `UpgradeModal`.
-- Pro user → unlimited.
-- Delete an analysis → row disappears (RLS enforced).
-
-Approve to build.
+- Exact concurrent-user capacity — depends on your Gemini tier and Supabase plan, both of which Lovable does not publish per-project.
+- Zero 429s under a viral spike — the queue+message pattern makes them survivable, not impossible.
+- That auto top-up is available on your specific plan — verify in Settings before relying on it.
