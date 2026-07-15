@@ -103,7 +103,7 @@ const Support = () => {
           Or email us directly at{" "}
           <a href="mailto:support@careerdecode.app" className="text-primary hover:underline">support@careerdecode.app</a>
         </p>
-      </div>
+      </main>
 
       <ContactDialog open={contactOpen} onOpenChange={setContactOpen} />
       <BugReportDialog open={bugOpen} onOpenChange={setBugOpen} />
