@@ -25,6 +25,8 @@ import TermsOfService from "@/pages/TermsOfService";
 import Pricing from "@/pages/Pricing";
 import Billing from "@/pages/Billing";
 import PaymentSuccess from "@/pages/PaymentSuccess";
+import LeaveReview from "@/pages/LeaveReview";
+import AdminReviews from "@/pages/AdminReviews";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 
@@ -58,6 +60,8 @@ const AppRoutes = () => (
     <Route path="/career-path" element={<ProtectedRoute><CareerPathPage /></ProtectedRoute>} />
     <Route path="/career-report" element={<ProtectedRoute><CareerReportPage /></ProtectedRoute>} />
     <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+    <Route path="/leave-review" element={<ProtectedRoute><LeaveReview /></ProtectedRoute>} />
+    <Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
