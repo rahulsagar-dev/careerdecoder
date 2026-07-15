@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.0";
 import { enforceUsage } from "../_shared/enforceUsage.ts";
+import { acquireSlot, releaseSlot, busyResponse } from "../_shared/aiGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -73,10 +74,15 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) throw new Error("Not authenticated");
 
-    const gate = await enforceUsage(user.id, "market-insights", { increment: true });
+    const gate = await enforceUsage(user.id, "market-insights", { increment: false });
     if (!gate.ok) {
       return new Response(JSON.stringify(gate.body), { status: gate.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    const slot = await acquireSlot(user.id, "market-insights");
+    if (!slot.ok) return busyResponse(slot.waitSeconds, corsHeaders);
+
+    try {
 
 
     const { role, user_skills } = await req.json();
@@ -296,9 +302,14 @@ Requirements:
 
     if (insertError) throw new Error(insertError.message);
 
+    await enforceUsage(user.id, "market-insights", { increment: true });
+
     return new Response(JSON.stringify({ data: inserted }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+    } finally {
+      await releaseSlot(user.id, "market-insights");
+    }
   } catch (e: any) {
     console.error("market-insights error:", e);
     return new Response(JSON.stringify({ error: e.message || "Unknown error" }), {

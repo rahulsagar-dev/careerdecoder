@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceUsage } from "../_shared/enforceUsage.ts";
+import { acquireSlot, releaseSlot, busyResponse } from "../_shared/aiGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,10 +30,15 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
-    const gate = await enforceUsage(userId, "project-suggestions", { increment: true });
+    const gate = await enforceUsage(userId, "project-suggestions", { increment: false });
     if (!gate.ok) {
       return new Response(JSON.stringify(gate.body), { status: gate.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    const slot = await acquireSlot(userId, "project-suggestions");
+    if (!slot.ok) return busyResponse(slot.waitSeconds, corsHeaders);
+
+    try {
 
 
     const { missing_skills, career_title } = await req.json();
@@ -155,9 +161,14 @@ Suggest 4-6 meaningful projects to build these missing skills.`;
       return new Response(JSON.stringify({ error: "Failed to store projects" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    await enforceUsage(userId, "project-suggestions", { increment: true });
+
     return new Response(JSON.stringify({ projects: inserted }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+    } finally {
+      await releaseSlot(userId, "project-suggestions");
+    }
   } catch (e) {
     console.error("Error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
