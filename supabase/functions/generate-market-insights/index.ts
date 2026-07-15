@@ -73,6 +73,12 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) throw new Error("Not authenticated");
 
+    const gate = await enforceUsage(user.id, "market-insights", { increment: true });
+    if (!gate.ok) {
+      return new Response(JSON.stringify(gate.body), { status: gate.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+
     const { role, user_skills } = await req.json();
     if (!role || typeof role !== "string" || role.trim().length < 2 || role.length > 100) {
       return new Response(JSON.stringify({ error: "Invalid role (2-100 characters required)" }), {
