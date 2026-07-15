@@ -138,12 +138,21 @@ const LinkedInAnalysisPage = () => {
         <Card className="rounded-2xl border shadow-sm">
           <CardContent className="py-6">
             <div
-              {...getRootProps()}
+              onClick={() => inputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setIsDragActive(true); }}
+              onDragLeave={() => setIsDragActive(false)}
+              onDrop={onDropEvent}
               className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${
                 isDragActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/40"
               }`}
             >
-              <input {...getInputProps()} />
+              <input
+                ref={inputRef}
+                type="file"
+                accept="application/pdf,.pdf"
+                className="hidden"
+                onChange={(e) => handleFile(e.target.files?.[0])}
+              />
               <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
                 <Upload className="h-6 w-6 text-primary" />
               </div>
