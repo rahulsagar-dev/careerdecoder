@@ -13,6 +13,8 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Footer from "@/components/layout/Footer";
+import { SEO } from "@/components/SEO";
+
 
 const FAQS = [
   { q: "How do AI career recommendations work?", a: "We analyze your profile, skills, and goals, then use AI to match you with careers ranked by fit and growth potential." },
@@ -30,7 +32,21 @@ const Support = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <div className="container max-w-4xl py-10 flex-1">
+      <SEO
+        title="Support & Help — Career Decode"
+        description="Get help with Career Decode. Contact us, report a bug, or browse frequently asked questions about AI career guidance."
+        path="/support"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQS.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }}
+      />
+      <main className="container max-w-4xl py-10 flex-1">
         <Button variant="ghost" size="sm" asChild className="mb-4">
           <Link to={user ? "/dashboard" : "/"}><ArrowLeft className="h-4 w-4 mr-1" /> Back</Link>
         </Button>
@@ -40,6 +56,7 @@ const Support = () => {
           <p className="text-muted-foreground">Choose an option below and we'll get back to you.</p>
         </div>
 
+        <h2 className="sr-only">Get support</h2>
         <div className="grid sm:grid-cols-2 gap-4 mb-10">
           <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setContactOpen(true)}>
             <CardHeader>
@@ -62,6 +79,7 @@ const Support = () => {
           </Card>
         </div>
 
+        <h2 className="sr-only">Frequently Asked Questions</h2>
         <Card className="mb-10">
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -85,7 +103,7 @@ const Support = () => {
           Or email us directly at{" "}
           <a href="mailto:support@careerdecode.app" className="text-primary hover:underline">support@careerdecode.app</a>
         </p>
-      </div>
+      </main>
 
       <ContactDialog open={contactOpen} onOpenChange={setContactOpen} />
       <BugReportDialog open={bugOpen} onOpenChange={setBugOpen} />

@@ -3,10 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -41,13 +42,14 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-8">
+    <main className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-8">
+      <SEO title="Create your Account — Career Decode" description="Sign up for Career Decode to get AI-powered career recommendations and personalized learning roadmaps." path="/signup" />
       <Card className="w-full max-w-md shadow-lg rounded-xl border-0">
         <CardHeader className="text-center space-y-1">
           <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent mx-auto">
             Career Decode
           </Link>
-          <CardTitle className="text-xl">Create an account</CardTitle>
+          <h1 className="text-xl font-semibold">Create your Account</h1>
           <CardDescription>Start your AI-powered career journey</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -91,7 +93,7 @@ const Signup = () => {
           </p>
         </CardFooter>
       </Card>
-    </div>
+    </main>
   );
 };
 

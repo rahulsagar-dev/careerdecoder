@@ -10,6 +10,7 @@ import { useIsIndia } from "@/hooks/useIndiaGeo";
 import { billingService, loadRazorpay } from "@/services/billingService";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { SEO } from "@/components/SEO";
 
 const FREE_FEATURES = [
   "1 career recommendation run",
@@ -98,6 +99,7 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO title="Pricing — Career Decode" description="Simple plans for Career Decode. Choose monthly or yearly and unlock AI-powered career guidance, roadmaps, and interview prep." path="/pricing" />
       <Navbar />
       <main className="flex-1 py-16 px-4">
         <div className="max-w-5xl mx-auto">

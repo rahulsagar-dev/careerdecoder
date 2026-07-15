@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ReviewsMarquee from "@/components/ReviewsMarquee";
+import { SEO } from "@/components/SEO";
 
 const features = [
   { icon: Brain, title: "AI Career Recommendations", desc: "Get personalized career paths powered by advanced AI algorithms tailored to your skills and aspirations." },
@@ -22,7 +23,13 @@ const steps = [
 
 const Landing = () => (
   <div className="min-h-screen flex flex-col">
+    <SEO
+      title="Career Decode — AI-Powered Career Guidance"
+      description="Personalized career paths, skill analysis, learning roadmaps, and interview prep — powered by AI."
+      path="/"
+    />
     <Navbar />
+    <main>
 
     {/* Hero */}
     <section className="relative overflow-hidden py-20 md:py-32">
@@ -118,6 +125,7 @@ const Landing = () => (
       </div>
     </section>
 
+    </main>
     <Footer />
   </div>
 );
