@@ -105,6 +105,8 @@ const Landing = () => (
       </div>
     </section>
 
+    <ReviewsMarquee />
+
     {/* CTA */}
     <section className="py-20 bg-gradient-to-r from-primary to-[hsl(260,84%,60%)]">
       <div className="container text-center space-y-6">
