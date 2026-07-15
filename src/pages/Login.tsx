@@ -21,6 +21,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect");
+  const safeRedirectTo = redirectTo?.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +38,7 @@ const Login = () => {
       await signIn(email, password);
       toast.success("Welcome back!");
       const profile = await profileService.getProfile();
-      navigate(profile ? redirectTo || "/dashboard" : "/profile/setup");
+      navigate(profile ? safeRedirectTo || "/dashboard" : "/profile/setup");
     } catch (error: any) {
       toast.error(error.message || "Invalid credentials");
     } finally {
