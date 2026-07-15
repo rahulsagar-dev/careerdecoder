@@ -34,8 +34,11 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'No active subscription' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const keyId = Deno.env.get('RAZORPAY_KEY_ID')!;
-    const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET')!;
+    const keyId = Deno.env.get('RAZORPAY_KEY_ID')?.trim();
+    const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET')?.trim();
+    if (!keyId || !keySecret) {
+      return new Response(JSON.stringify({ error: 'Razorpay not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     const res = await fetch(`https://api.razorpay.com/v1/subscriptions/${sub.provider_subscription_id}/cancel`, {
       method: 'POST',
