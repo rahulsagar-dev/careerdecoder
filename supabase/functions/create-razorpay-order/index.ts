@@ -60,14 +60,24 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: rzpJson.error?.description || 'Razorpay error' }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Store pending subscription id so webhook can match by provider_subscription_id
+    // Store pending subscription id so the webhook can match the paid Razorpay
+    // subscription back to this authenticated user. Use upsert because older
+    // accounts may not have a seeded free subscription row yet.
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-    await admin.from('subscriptions').update({
+    const { error: syncErr } = await admin.from('subscriptions').upsert({
+      user_id: user.id,
+      plan: 'free',
+      status: 'active',
       provider: 'razorpay',
       provider_subscription_id: rzpJson.id,
       billing_interval: interval,
       currency: 'inr',
-    }).eq('user_id', user.id);
+    }, { onConflict: 'user_id' });
+
+    if (syncErr) {
+      console.error('Failed to sync pending subscription', syncErr);
+      return new Response(JSON.stringify({ error: 'Could not prepare subscription. Please try again.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     return new Response(JSON.stringify({
       subscription_id: rzpJson.id,

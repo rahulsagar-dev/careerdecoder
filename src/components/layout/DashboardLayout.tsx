@@ -124,10 +124,10 @@ function SidebarNav() {
               {INSIGHT_ITEMS.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url} className="transition-all duration-200 rounded-lg hover:bg-primary/5">
+                    <NavLink to={`${location.pathname}${item.url}`} className="transition-all duration-200 rounded-lg hover:bg-primary/5">
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span>{item.title}</span>}
-                    </a>
+                    </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
