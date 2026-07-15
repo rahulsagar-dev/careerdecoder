@@ -2,3 +2,9 @@ project_id = "voydvjkvsathgckzcjgp"
 
 [functions.razorpay-webhook]
 verify_jwt = false
+
+[functions.turnstile-config]
+verify_jwt = false
+
+[functions.verify-turnstile]
+verify_jwt = false
