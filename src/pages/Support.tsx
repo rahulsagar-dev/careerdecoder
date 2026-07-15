@@ -199,11 +199,25 @@ const BugReportDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
       let screenshotUrl: string | null = null;
 
       if (screenshot && user) {
-        const ext = screenshot.name.split(".").pop() || "png";
+        const MAX = 5 * 1024 * 1024;
+        const ALLOWED = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+        if (screenshot.size > MAX) {
+          toast.error("Screenshot must be 5MB or smaller");
+          setLoading(false);
+          return;
+        }
+        if (screenshot.type && !ALLOWED.includes(screenshot.type)) {
+          toast.error("Only PNG, JPEG, WEBP or GIF images are allowed");
+          setLoading(false);
+          return;
+        }
+        const extFromName = screenshot.name.split(".").pop()?.toLowerCase() || "png";
+        const allowedExts = ["png", "jpg", "jpeg", "webp", "gif"];
+        const ext = allowedExts.includes(extFromName) ? extFromName : "png";
         const path = `${user.id}/${Date.now()}.${ext}`;
         const { error: uploadErr } = await supabase.storage
           .from("bug-screenshots")
-          .upload(path, screenshot, { contentType: screenshot.type });
+          .upload(path, screenshot, { contentType: screenshot.type || "image/png" });
         if (uploadErr) throw uploadErr;
         screenshotUrl = path;
       }

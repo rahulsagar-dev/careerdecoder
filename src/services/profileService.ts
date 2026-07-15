@@ -100,12 +100,26 @@ export const profileService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
-    const fileExt = file.name.split(".").pop();
-    const filePath = `${user.id}/resume.${fileExt}`;
+    // Validate size and MIME type (belt-and-suspenders; bucket-level limits set in dashboard)
+    const MAX = 10 * 1024 * 1024;
+    const ALLOWED = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (file.size > MAX) throw new Error("Resume must be 10MB or smaller");
+    if (file.type && !ALLOWED.includes(file.type)) {
+      throw new Error("Only PDF or Word documents are allowed");
+    }
+
+    const extFromName = file.name.split(".").pop()?.toLowerCase() ?? "";
+    const allowedExts = ["pdf", "doc", "docx"];
+    const ext = allowedExts.includes(extFromName) ? extFromName : "pdf";
+    const filePath = `${user.id}/resume.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from("resumes")
-      .upload(filePath, file, { upsert: true });
+      .upload(filePath, file, { upsert: true, contentType: file.type || "application/pdf" });
 
     if (uploadError) throw uploadError;
 
