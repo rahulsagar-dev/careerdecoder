@@ -27,6 +27,7 @@ import Billing from "@/pages/Billing";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import LeaveReview from "@/pages/LeaveReview";
 import AdminReviews from "@/pages/AdminReviews";
+import AdminInbox from "@/pages/AdminInbox";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 
