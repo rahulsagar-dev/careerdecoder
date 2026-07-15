@@ -157,6 +157,12 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
+    const gate = await enforceUsage(userId, "learning-roadmap", { increment: true });
+    if (!gate.ok) {
+      return new Response(JSON.stringify(gate.body), { status: gate.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+
     const { career_title, missing_skills } = await req.json();
 
     if (!career_title || typeof career_title !== "string" || career_title.length > 200) {
