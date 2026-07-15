@@ -52,19 +52,31 @@ const Pricing = () => {
     try {
       const ok = await loadRazorpay();
       if (!ok) throw new Error("Failed to load Razorpay");
-      const { subscription_id, key_id } = await billingService.createSubscription(interval);
+      const { order_id, amount, currency, key_id } = await billingService.createSubscription(interval);
 
       const rzp = new (window as any).Razorpay({
         key: key_id,
-        subscription_id,
+        order_id,
+        amount,
+        currency,
         name: "Decode My Career",
         description: `Pro ${interval} plan`,
         prefill: { email: user.email },
         theme: { color: "#4f46e5" },
-        handler: async () => {
-          toast.success("Payment successful! Activating your Pro plan…");
-          await refresh();
-          navigate("/payment-success");
+        handler: async (response: {
+          razorpay_payment_id: string;
+          razorpay_order_id: string;
+          razorpay_signature: string;
+        }) => {
+          try {
+            await billingService.verifyPayment(response);
+            toast.success("Payment verified! Pro is active.");
+            await refresh();
+            navigate("/payment-success");
+          } catch (e) {
+            toast.error((e as Error).message);
+            setLoading(false);
+          }
         },
         modal: {
           ondismiss: () => setLoading(false),
@@ -170,7 +182,7 @@ const Pricing = () => {
           </div>
 
           <p className="text-center text-xs text-muted-foreground mt-8">
-            Prices in INR. GST additional as applicable. Cancel anytime — you keep Pro access until the end of your billing cycle.
+            Prices in INR. GST additional as applicable. Pro access remains active until the end of your selected period.
           </p>
         </div>
       </main>

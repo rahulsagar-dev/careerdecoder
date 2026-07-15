@@ -37,12 +37,13 @@ export async function enforceUsage(
 
   const { data: sub } = await admin
     .from("subscriptions")
-    .select("plan,status")
+    .select("plan,status,current_period_end")
     .eq("user_id", userId)
     .maybeSingle();
 
   const plan = sub?.plan ?? "free";
-  const isPro = plan === "pro" && sub?.status === "active";
+  const periodActive = !sub?.current_period_end || new Date(sub.current_period_end).getTime() > Date.now();
+  const isPro = plan === "pro" && sub?.status === "active" && periodActive;
 
   // Pro users: unlimited on all features (including career-report).
   if (isPro) return { ok: true, plan };

@@ -81,7 +81,7 @@ const Billing = () => {
                   {cancelAtPeriodEnd ? (
                     <>Canceling — active until <strong>{periodEndStr}</strong>. You'll be moved to the Free plan after that.</>
                   ) : (
-                    <>Next billing date: <strong>{periodEndStr}</strong></>
+                    <>Pro access active until: <strong>{periodEndStr}</strong></>
                   )}
                 </div>
               </div>

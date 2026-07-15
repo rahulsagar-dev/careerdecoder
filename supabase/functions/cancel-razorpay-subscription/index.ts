@@ -28,6 +28,11 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'No active subscription' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    if (String(sub.provider_subscription_id).startsWith('order_')) {
+      await admin.from('subscriptions').update({ cancel_at_period_end: true }).eq('user_id', userRes.user.id);
+      return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const keyId = Deno.env.get('RAZORPAY_KEY_ID')?.trim();
     const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET')?.trim();
     if (!keyId || !keySecret) {

@@ -50,13 +50,16 @@ export function useSubscription(): SubscriptionInfo {
     }
     const plan = (data?.plan ?? "free") as "free" | "pro";
     const status = data?.status ?? "active";
+    const currentPeriodEnd = data?.current_period_end ?? null;
+    const periodActive = !currentPeriodEnd || new Date(currentPeriodEnd).getTime() > Date.now();
+    const isActive = status === "active" && periodActive;
     setState({
       plan,
       status,
-      isActive: status === "active",
-      isPro: plan === "pro" && status === "active",
+      isActive,
+      isPro: plan === "pro" && isActive,
       loading: false,
-      currentPeriodEnd: data?.current_period_end ?? null,
+      currentPeriodEnd,
       cancelAtPeriodEnd: data?.cancel_at_period_end ?? false,
       provider: data?.provider ?? null,
       billingInterval: data?.billing_interval ?? null,
