@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Printer, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/layout/Footer";
+import { SEO } from "@/components/SEO";
 
 const SECTIONS = [
   { id: "acceptance", title: "1. Acceptance of Terms", body: "By creating an account or using Career Decode, you agree to these Terms of Service. If you do not agree, do not use the service." },
@@ -20,7 +21,8 @@ const SECTIONS = [
 
 const TermsOfService = () => (
   <div className="min-h-screen flex flex-col bg-background">
-    <div className="container max-w-3xl py-10 flex-1">
+    <SEO title="Terms of Service — Career Decode" description="The terms governing your use of Career Decode's AI-powered career guidance platform." path="/terms-of-service" />
+    <main className="container max-w-3xl py-10 flex-1">
       <Button variant="ghost" size="sm" asChild className="mb-4">
         <Link to="/"><ArrowLeft className="h-4 w-4 mr-1" /> Back</Link>
       </Button>
@@ -52,7 +54,7 @@ const TermsOfService = () => (
           </section>
         ))}
       </article>
-    </div>
+    </main>
     <Footer />
   </div>
 );
