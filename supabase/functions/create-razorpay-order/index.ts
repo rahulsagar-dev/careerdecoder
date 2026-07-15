@@ -28,14 +28,20 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const interval = body.interval === 'yearly' ? 'yearly' : 'monthly';
-    const planId = interval === 'yearly'
+    const planId = (interval === 'yearly'
       ? Deno.env.get('RAZORPAY_PLAN_YEARLY')
-      : Deno.env.get('RAZORPAY_PLAN_MONTHLY');
+      : Deno.env.get('RAZORPAY_PLAN_MONTHLY'))?.trim();
 
-    const keyId = Deno.env.get('RAZORPAY_KEY_ID')!;
-    const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET')!;
+    const keyId = Deno.env.get('RAZORPAY_KEY_ID')?.trim();
+    const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET')?.trim();
     if (!planId || !keyId || !keySecret) {
       return new Response(JSON.stringify({ error: 'Razorpay not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const isTestKey = keyId.startsWith('rzp_test_');
+    const isLiveKey = keyId.startsWith('rzp_live_');
+    if (!isTestKey && !isLiveKey) {
+      return new Response(JSON.stringify({ error: 'Invalid Razorpay key format' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const totalCount = interval === 'yearly' ? 5 : 60; // 5 years or 5 years-worth of months
@@ -57,7 +63,11 @@ Deno.serve(async (req) => {
     const rzpJson = await rzpRes.json();
     if (!rzpRes.ok) {
       console.error('Razorpay create subscription failed', rzpJson);
-      return new Response(JSON.stringify({ error: rzpJson.error?.description || 'Razorpay error' }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      const razorpayMessage = rzpJson.error?.description || 'Razorpay error';
+      const safeMessage = razorpayMessage === 'Authentication failed'
+        ? 'Razorpay authentication failed. Check that your Key ID, Key Secret, and Plan IDs are from the same Test/Live mode.'
+        : razorpayMessage;
+      return new Response(JSON.stringify({ error: safeMessage }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Store pending subscription id so the webhook can match the paid Razorpay
