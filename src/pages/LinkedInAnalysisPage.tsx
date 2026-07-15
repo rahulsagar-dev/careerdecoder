@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useDropzone } from "react-dropzone";
+import { useEffect, useState, useRef, DragEvent } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +38,8 @@ const LinkedInAnalysisPage = () => {
   const [past, setPast] = useState<LinkedInAnalysis[]>([]);
   const [loading, setLoading] = useState(true);
   const [phase, setPhase] = useState<"" | "parsing" | "analyzing">("");
+  const [isDragActive, setIsDragActive] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     (async () => {
@@ -49,8 +50,7 @@ const LinkedInAnalysisPage = () => {
     })();
   }, []);
 
-  const onDrop = async (files: File[]) => {
-    const file = files[0];
+  const handleFile = async (file: File | null | undefined) => {
     if (!file) return;
     if (file.type !== "application/pdf") return toast.error("Only PDF files are supported");
     if (file.size > MAX_SIZE) return toast.error("File exceeds 10MB");
@@ -69,12 +69,11 @@ const LinkedInAnalysisPage = () => {
     }
   };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: { "application/pdf": [".pdf"] },
-    maxFiles: 1,
-    disabled: !!phase,
-  });
+  const onDropEvent = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragActive(false);
+    handleFile(e.dataTransfer.files?.[0]);
+  };
 
   const handleDelete = async (id: string) => {
     try {
