@@ -46,12 +46,13 @@ Deno.serve(async (req) => {
 
     const { data: sub } = await admin
       .from('subscriptions')
-      .select('plan,status')
+      .select('plan,status,current_period_end')
       .eq('user_id', userId)
       .maybeSingle();
 
     const plan = sub?.plan ?? 'free';
-    const isPro = plan === 'pro' && sub?.status === 'active';
+    const periodActive = !sub?.current_period_end || new Date(sub.current_period_end).getTime() > Date.now();
+    const isPro = plan === 'pro' && sub?.status === 'active' && periodActive;
 
     if (isPro && feature !== 'career-report') {
       return new Response(JSON.stringify({ allowed: true, remaining: -1, plan, limit: -1 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
