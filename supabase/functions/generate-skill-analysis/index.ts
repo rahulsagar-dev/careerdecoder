@@ -626,7 +626,6 @@ Return structured data by calling the provided function.`,
     });
   } catch (e) {
     console.error("Error:", e);
-    await releaseSlot(claimsData?.claims?.sub ?? "", "skill-analysis").catch(() => {});
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
