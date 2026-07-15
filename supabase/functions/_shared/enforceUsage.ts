@@ -8,6 +8,7 @@ const FREE_LIMITS: Record<string, number> = {
   "github-analysis": 1,
   "interview-session": 3,
   "resume-analysis": 2,
+  "linkedin-analysis": 1,
   "career-report": 0, // Pro-only
 };
 

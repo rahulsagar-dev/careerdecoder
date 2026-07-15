@@ -13,6 +13,7 @@ import SkillAnalysisPage from "@/pages/SkillAnalysisPage";
 import LearningRoadmapPage from "@/pages/LearningRoadmapPage";
 import ResumeAnalysisPage from "@/pages/ResumeAnalysisPage";
 import GitHubAnalysisPage from "@/pages/GitHubAnalysisPage";
+import LinkedInAnalysisPage from "@/pages/LinkedInAnalysisPage";
 import InterviewSimulatorPage from "@/pages/InterviewSimulatorPage";
 import MarketIntelligencePage from "@/pages/MarketIntelligencePage";
 import CareerPathPage from "@/pages/CareerPathPage";
@@ -51,6 +52,7 @@ const AppRoutes = () => (
     <Route path="/learning-roadmap" element={<ProtectedRoute><LearningRoadmapPage /></ProtectedRoute>} />
     <Route path="/resume-analysis" element={<ProtectedRoute><ResumeAnalysisPage /></ProtectedRoute>} />
     <Route path="/github-analysis" element={<ProtectedRoute><GitHubAnalysisPage /></ProtectedRoute>} />
+    <Route path="/linkedin-analysis" element={<ProtectedRoute><LinkedInAnalysisPage /></ProtectedRoute>} />
     <Route path="/interview-simulator" element={<ProtectedRoute><InterviewSimulatorPage /></ProtectedRoute>} />
     <Route path="/market-intelligence" element={<ProtectedRoute><MarketIntelligencePage /></ProtectedRoute>} />
     <Route path="/career-path" element={<ProtectedRoute><CareerPathPage /></ProtectedRoute>} />
