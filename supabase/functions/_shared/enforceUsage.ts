@@ -10,6 +10,9 @@ const FREE_LIMITS: Record<string, number> = {
   "resume-analysis": 2,
   "linkedin-analysis": 1,
   "career-report": 0, // Pro-only
+  "learning-roadmap": 2,
+  "market-insights": 2,
+  "project-suggestions": 2,
 };
 
 export type EnforceResult =
