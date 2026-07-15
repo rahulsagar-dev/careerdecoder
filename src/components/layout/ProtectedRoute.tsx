@@ -7,14 +7,6 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  console.log("[protected-route]", {
-    path: location.pathname,
-    loading,
-    hasUser: Boolean(user),
-    userId: user?.id ?? null,
-    decision: loading ? "show-loader" : user ? "render" : "redirect-login",
-  });
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -24,7 +16,7 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
   return <>{children}</>;

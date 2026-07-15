@@ -20,42 +20,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Auth listener — only clear session on explicit SIGNED_OUT / USER_DELETED.
-    // A transient null session on other events (e.g. INITIAL_SESSION with no
-    // stored session, TOKEN_REFRESHED race) must not flip user->null and
-    // cause ProtectedRoute to redirect mid-navigation.
+    let mounted = true;
+
+    const applySession = (nextSession: Session | null) => {
+      if (!mounted) return;
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+      setLoading(false);
+    };
+
+    // Load the persisted session first so protected pages and checkout actions
+    // never see a temporary unauthenticated state while Supabase restores auth.
+    supabase.auth.getSession().then(({ data: { session: existing } }) => {
+      applySession(existing);
+    });
+
+    // Auth listener — only clear session on explicit sign-out/delete events.
+    // Other events with a null payload must not flip user->null mid-navigation.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
-        console.log("[auth-state-change]", {
-          event,
-          hasSession: Boolean(newSession),
-          userId: newSession?.user?.id ?? null,
-          expiresAt: newSession?.expires_at ?? null,
-        });
         if (event === "SIGNED_OUT" || event === "USER_DELETED" as string) {
-          setSession(null);
-          setUser(null);
+          applySession(null);
         } else if (newSession) {
-          setSession(newSession);
-          setUser(newSession.user);
+          applySession(newSession);
+        } else if (mounted) {
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
-    // Initial session check
-    supabase.auth.getSession().then(({ data: { session: existing } }) => {
-      console.log("[auth-get-session]", {
-        hasSession: Boolean(existing),
-        userId: existing?.user?.id ?? null,
-        expiresAt: existing?.expires_at ?? null,
-      });
-      setSession(existing);
-      setUser(existing?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {

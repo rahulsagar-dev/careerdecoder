@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { LayoutDashboard, Loader2, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
   const scrollToFeatures = () => {
     setMobileOpen(false);
@@ -32,12 +34,24 @@ const Navbar = () => {
           <button onClick={scrollToFeatures} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Features
           </button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
-            Login
-          </Button>
-          <Button size="sm" className="bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] hover:opacity-90 transition-opacity" onClick={() => navigate("/signup")}>
-            Sign Up
-          </Button>
+          {loading ? (
+            <Button variant="ghost" size="sm" disabled>
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </Button>
+          ) : user ? (
+            <Button size="sm" className="bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] hover:opacity-90 transition-opacity" onClick={() => navigate("/dashboard")}>
+              <LayoutDashboard className="h-4 w-4 mr-2" /> Dashboard
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
+                Login
+              </Button>
+              <Button size="sm" className="bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] hover:opacity-90 transition-opacity" onClick={() => navigate("/signup")}>
+                Sign Up
+              </Button>
+            </>
+          )}
         </nav>
 
         {/* Mobile toggle */}
@@ -51,8 +65,18 @@ const Navbar = () => {
         <div className="md:hidden border-t border-border bg-background px-4 pb-4 space-y-3">
           <Link to="/" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-medium text-muted-foreground">Home</Link>
           <button onClick={scrollToFeatures} className="block py-2 text-sm font-medium text-muted-foreground w-full text-left">Features</button>
-          <Button variant="ghost" className="w-full justify-start" onClick={() => { setMobileOpen(false); navigate("/login"); }}>Login</Button>
-          <Button className="w-full bg-gradient-to-r from-primary to-[hsl(260,84%,60%)]" onClick={() => { setMobileOpen(false); navigate("/signup"); }}>Sign Up</Button>
+          {loading ? (
+            <Button variant="ghost" className="w-full justify-start" disabled><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading</Button>
+          ) : user ? (
+            <Button className="w-full bg-gradient-to-r from-primary to-[hsl(260,84%,60%)]" onClick={() => { setMobileOpen(false); navigate("/dashboard"); }}>
+              <LayoutDashboard className="h-4 w-4 mr-2" /> Dashboard
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" className="w-full justify-start" onClick={() => { setMobileOpen(false); navigate("/login"); }}>Login</Button>
+              <Button className="w-full bg-gradient-to-r from-primary to-[hsl(260,84%,60%)]" onClick={() => { setMobileOpen(false); navigate("/signup"); }}>Sign Up</Button>
+            </>
+          )}
         </div>
       )}
     </header>

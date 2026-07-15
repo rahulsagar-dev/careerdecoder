@@ -16,7 +16,7 @@ export interface SubscriptionInfo {
 }
 
 export function useSubscription(): SubscriptionInfo {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [state, setState] = useState<Omit<SubscriptionInfo, "refresh">>({
     plan: "free",
     status: "active",
@@ -30,12 +30,12 @@ export function useSubscription(): SubscriptionInfo {
   });
 
   const load = useCallback(async () => {
-    console.log("[billing-subscription-load:start]", {
-      hasUser: Boolean(user),
-      userId: user?.id ?? null,
-    });
+    if (authLoading) {
+      setState((s) => ({ ...s, loading: true }));
+      return;
+    }
+
     if (!user) {
-      console.log("[billing-subscription-load:skip] no user");
       setState((s) => ({ ...s, loading: false }));
       return;
     }
@@ -44,13 +44,6 @@ export function useSubscription(): SubscriptionInfo {
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
-    console.log("[billing-subscription-load:result]", {
-      status: responseStatus,
-      errorCode: error?.code ?? null,
-      errorMessage: error?.message ?? null,
-      hasData: Boolean(data),
-      userId: user.id,
-    });
     if (error) {
       setState((s) => ({ ...s, loading: false }));
       return;
@@ -68,7 +61,7 @@ export function useSubscription(): SubscriptionInfo {
       provider: data?.provider ?? null,
       billingInterval: data?.billing_interval ?? null,
     });
-  }, [user]);
+  }, [authLoading, user]);
 
   useEffect(() => {
     load();

@@ -31,8 +31,8 @@ const PRO_FEATURES = [
 ];
 
 const Pricing = () => {
-  const { user } = useAuth();
-  const { plan, isPro, refresh } = useSubscription();
+  const { user, loading: authLoading } = useAuth();
+  const { plan, isPro, refresh, loading: subscriptionLoading } = useSubscription();
   const { isIndia, loading: geoLoading } = useIsIndia();
   const navigate = useNavigate();
   const [interval, setInterval] = useState<"monthly" | "yearly">("monthly");
@@ -42,6 +42,8 @@ const Pricing = () => {
   const suffix = interval === "monthly" ? "/mo" : "/yr";
 
   const handleUpgrade = async () => {
+    if (authLoading) return;
+
     if (!user) {
       navigate("/login?redirect=/pricing");
       return;
@@ -80,6 +82,7 @@ const Pricing = () => {
   };
 
   const canPay = isIndia;
+  const checkoutLoading = loading || authLoading || subscriptionLoading;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -147,12 +150,12 @@ const Pricing = () => {
                 <Button className="w-full" asChild>
                   <Link to="/billing">Manage subscription</Link>
                 </Button>
-              ) : geoLoading ? (
+              ) : geoLoading || authLoading || subscriptionLoading ? (
                 <Button className="w-full" disabled><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading…</Button>
               ) : canPay ? (
                 <Button
                   onClick={handleUpgrade}
-                  disabled={loading}
+                  disabled={checkoutLoading}
                   className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:opacity-90"
                 >
                   {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Opening checkout…</> : "Upgrade to Pro"}
