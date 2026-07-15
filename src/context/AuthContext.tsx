@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           applySession(null);
         } else if (newSession) {
           applySession(newSession);
-        } else if (mounted) {
+        } else if (mounted && event !== "INITIAL_SESSION") {
           setLoading(false);
         }
       }

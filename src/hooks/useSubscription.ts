@@ -39,7 +39,7 @@ export function useSubscription(): SubscriptionInfo {
       setState((s) => ({ ...s, loading: false }));
       return;
     }
-    const { data, error, status: responseStatus } = await supabase
+    const { data, error } = await supabase
       .from("subscriptions")
       .select("*")
       .eq("user_id", user.id)

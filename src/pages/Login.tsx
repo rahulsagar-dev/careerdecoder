@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { profileService } from "@/services/profileService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,8 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +37,7 @@ const Login = () => {
       await signIn(email, password);
       toast.success("Welcome back!");
       const profile = await profileService.getProfile();
-      navigate(profile ? "/dashboard" : "/profile/setup");
+      navigate(profile ? redirectTo || "/dashboard" : "/profile/setup");
     } catch (error: any) {
       toast.error(error.message || "Invalid credentials");
     } finally {
