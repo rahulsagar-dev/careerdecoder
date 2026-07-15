@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      active_generations: {
+        Row: {
+          feature: string
+          id: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          feature: string
+          id?: string
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          feature?: string
+          id?: string
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bug_reports: {
         Row: {
           browser_info: string | null
@@ -65,6 +86,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          input_hash: string | null
           match_score: number
           missing_skills: string[] | null
           required_skills: string[] | null
@@ -76,6 +98,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          input_hash?: string | null
           match_score?: number
           missing_skills?: string[] | null
           required_skills?: string[] | null
@@ -87,6 +110,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          input_hash?: string | null
           match_score?: number
           missing_skills?: string[] | null
           required_skills?: string[] | null
@@ -272,6 +296,7 @@ export type Database = {
           experience_score: number
           headline_score: number
           id: string
+          input_hash: string | null
           keyword_gaps: Json
           overall_score: number
           parsed_text: string | null
@@ -289,6 +314,7 @@ export type Database = {
           experience_score?: number
           headline_score?: number
           id?: string
+          input_hash?: string | null
           keyword_gaps?: Json
           overall_score?: number
           parsed_text?: string | null
@@ -306,6 +332,7 @@ export type Database = {
           experience_score?: number
           headline_score?: number
           id?: string
+          input_hash?: string | null
           keyword_gaps?: Json
           overall_score?: number
           parsed_text?: string | null
@@ -327,6 +354,7 @@ export type Database = {
           demand_level: string | null
           high_impact_skills: string[] | null
           id: string
+          input_hash: string | null
           insights: string | null
           last_updated: string | null
           market_position_score: number | null
@@ -345,6 +373,7 @@ export type Database = {
           demand_level?: string | null
           high_impact_skills?: string[] | null
           id?: string
+          input_hash?: string | null
           insights?: string | null
           last_updated?: string | null
           market_position_score?: number | null
@@ -363,6 +392,7 @@ export type Database = {
           demand_level?: string | null
           high_impact_skills?: string[] | null
           id?: string
+          input_hash?: string | null
           insights?: string | null
           last_updated?: string | null
           market_position_score?: number | null
@@ -403,6 +433,45 @@ export type Database = {
           processed_at?: string
           provider?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      pending_generations: {
+        Row: {
+          attempts: number
+          created_at: string
+          error_message: string | null
+          feature: string
+          id: string
+          payload: Json
+          result: Json | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          error_message?: string | null
+          feature: string
+          id?: string
+          payload?: Json
+          result?: Json | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          error_message?: string | null
+          feature?: string
+          id?: string
+          payload?: Json
+          result?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -551,6 +620,7 @@ export type Database = {
           extracted_projects: Json | null
           extracted_skills: string[] | null
           id: string
+          input_hash: string | null
           strengths: string[] | null
           suggestions: string[] | null
           tech_stack: string[] | null
@@ -564,6 +634,7 @@ export type Database = {
           extracted_projects?: Json | null
           extracted_skills?: string[] | null
           id?: string
+          input_hash?: string | null
           strengths?: string[] | null
           suggestions?: string[] | null
           tech_stack?: string[] | null
@@ -577,6 +648,7 @@ export type Database = {
           extracted_projects?: Json | null
           extracted_skills?: string[] | null
           id?: string
+          input_hash?: string | null
           strengths?: string[] | null
           suggestions?: string[] | null
           tech_stack?: string[] | null
@@ -675,6 +747,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          input_hash: string | null
           matched_skills: number
           missing_skills: number
           readiness_score: number
@@ -685,6 +758,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          input_hash?: string | null
           matched_skills?: number
           missing_skills?: number
           readiness_score?: number
@@ -695,6 +769,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          input_hash?: string | null
           matched_skills?: number
           missing_skills?: number
           readiness_score?: number

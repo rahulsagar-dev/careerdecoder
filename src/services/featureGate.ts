@@ -56,6 +56,12 @@ function looksLikeUpgradeError(err: unknown): { feature?: string; reason: string
   return null;
 }
 
+function looksLikeBusyError(err: unknown): boolean {
+  const msg = (err instanceof Error ? err.message : String(err || "")).toLowerCase();
+  return msg.includes("already have a") && msg.includes("in progress");
+}
+
+
 /**
  * Central error handler for AI feature calls. Opens the upgrade modal on
  * limit / pro-only errors and returns true (caller should skip its own toast).
@@ -67,7 +73,12 @@ export function handleFeatureError(err: unknown, fallback = "Something went wron
     requestUpgrade({ feature: up.feature, reason: up.reason });
     return true;
   }
+  if (looksLikeBusyError(err)) {
+    toast.info("A generation is already running for you. Please wait a moment and try again.");
+    return true;
+  }
   const msg = err instanceof Error ? err.message : fallback;
   toast.error(msg || fallback);
   return false;
 }
+
