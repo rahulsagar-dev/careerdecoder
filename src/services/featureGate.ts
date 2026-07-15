@@ -73,7 +73,12 @@ export function handleFeatureError(err: unknown, fallback = "Something went wron
     requestUpgrade({ feature: up.feature, reason: up.reason });
     return true;
   }
+  if (looksLikeBusyError(err)) {
+    toast.info("A generation is already running for you. Please wait a moment and try again.");
+    return true;
+  }
   const msg = err instanceof Error ? err.message : fallback;
   toast.error(msg || fallback);
   return false;
 }
+
