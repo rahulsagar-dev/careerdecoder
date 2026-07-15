@@ -7,11 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const PLAN_AMOUNTS: Record<string, number> = {
-  monthly: 49900,
-  yearly: 399900,
-};
-
 function json(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -62,50 +57,36 @@ Deno.serve(async (req) => {
       return json({ error: 'Payment signature mismatch' }, 400);
     }
 
-    const auth = 'Basic ' + btoa(`${keyId}:${keySecret}`);
-    const [orderRes, paymentRes] = await Promise.all([
-      fetch(`https://api.razorpay.com/v1/orders/${encodeURIComponent(orderId)}`, { headers: { Authorization: auth } }),
-      fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(paymentId)}`, { headers: { Authorization: auth } }),
-    ]);
+    const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const { data: pendingSubscription, error: pendingErr } = await admin
+      .from('subscriptions')
+      .select('billing_interval, provider_subscription_id, status')
+      .eq('user_id', user.id)
+      .eq('provider', 'razorpay')
+      .eq('provider_subscription_id', orderId)
+      .maybeSingle();
 
-    const orderJson = await orderRes.json();
-    const paymentJson = await paymentRes.json();
-
-    if (!orderRes.ok) {
-      console.error('Razorpay order lookup failed', orderJson);
-      return json({ error: orderJson.error?.description || 'Could not verify Razorpay order' }, 502);
+    if (pendingErr) {
+      console.error('Failed to read pending subscription', pendingErr);
+      return json({ error: 'Could not verify pending payment. Please contact support.' }, 500);
     }
-    if (!paymentRes.ok) {
-      console.error('Razorpay payment lookup failed', paymentJson);
-      return json({ error: paymentJson.error?.description || 'Could not verify Razorpay payment' }, 502);
-    }
-
-    const interval = orderJson.notes?.interval === 'yearly' ? 'yearly' : 'monthly';
-    const expectedAmount = PLAN_AMOUNTS[interval];
-    const paymentStatus = String(paymentJson.status || '');
-
-    if (orderJson.notes?.user_id !== user.id || paymentJson.order_id !== orderId) {
+    if (!pendingSubscription) {
       return json({ error: 'Payment does not belong to this account' }, 400);
     }
-    if (orderJson.currency !== 'INR' || paymentJson.currency !== 'INR' || orderJson.amount !== expectedAmount || paymentJson.amount !== expectedAmount) {
-      return json({ error: 'Payment amount mismatch' }, 400);
-    }
-    if (!['authorized', 'captured'].includes(paymentStatus)) {
-      return json({ error: 'Payment is not successful yet' }, 400);
-    }
+
+    const interval = pendingSubscription.billing_interval === 'yearly' ? 'yearly' : 'monthly';
 
     const now = new Date();
     const periodEnd = new Date(now);
     if (interval === 'yearly') periodEnd.setUTCFullYear(periodEnd.getUTCFullYear() + 1);
     else periodEnd.setUTCDate(periodEnd.getUTCDate() + 30);
 
-    const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     await admin.from('payment_events').upsert({
       provider: 'razorpay',
       event_id: paymentId,
       event_type: 'payment.verified',
       user_id: user.id,
-      payload: { order: orderJson, payment: paymentJson },
+      payload: { order_id: orderId, payment_id: paymentId, interval },
     }, { onConflict: 'provider,event_id', ignoreDuplicates: true });
 
     const { error: syncErr } = await admin.from('subscriptions').upsert({
