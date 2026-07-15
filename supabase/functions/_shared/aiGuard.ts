@@ -81,10 +81,33 @@ export async function releaseSlot(userId: string, feature: string): Promise<void
 export function busyResponse(waitSeconds: number, corsHeaders: Record<string, string>) {
   return new Response(
     JSON.stringify({
-      error: `You already have a ${"request"} in progress. Please wait ~${waitSeconds}s and try again.`,
+      error: `You already have a request in progress. Please wait ~${waitSeconds}s and try again.`,
       reason: "already_running",
       wait_seconds: waitSeconds,
     }),
     { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 }
+
+/**
+ * Enqueue a pending generation for later async processing when the AI provider is
+ * rate-limited or unavailable. Callers should return a 202 with the id to the
+ * client, then a background worker (cron) will drain the queue.
+ */
+export async function enqueuePending(
+  userId: string,
+  feature: string,
+  payload: unknown,
+): Promise<string | null> {
+  const { data, error } = await admin()
+    .from("pending_generations")
+    .insert({ user_id: userId, feature, payload: payload as any, status: "queued" })
+    .select("id")
+    .single();
+  if (error) {
+    console.error("enqueuePending error:", error);
+    return null;
+  }
+  return data.id as string;
+}
+
