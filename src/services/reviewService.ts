@@ -80,9 +80,10 @@ export const reviewService = {
   },
 
   async setStatus(id: string, status: "approved" | "rejected" | "pending"): Promise<void> {
-    const update: Record<string, unknown> = { status };
-    if (status === "approved") update.approved_at = new Date().toISOString();
-    if (status !== "approved") update.approved_at = null;
+    const update = {
+      status,
+      approved_at: status === "approved" ? new Date().toISOString() : null,
+    };
     const { error } = await supabase.from("reviews").update(update).eq("id", id);
     if (error) throw error;
   },
