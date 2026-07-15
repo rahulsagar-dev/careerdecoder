@@ -79,6 +79,7 @@ const Support = () => {
           </Card>
         </div>
 
+        <h2 className="sr-only">Frequently Asked Questions</h2>
         <Card className="mb-10">
           <CardHeader>
             <div className="flex items-center gap-2">
