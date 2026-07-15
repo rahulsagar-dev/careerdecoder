@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import ReviewsMarquee from "@/components/ReviewsMarquee";
 
 const features = [
   { icon: Brain, title: "AI Career Recommendations", desc: "Get personalized career paths powered by advanced AI algorithms tailored to your skills and aspirations." },
@@ -103,6 +104,8 @@ const Landing = () => (
         </div>
       </div>
     </section>
+
+    <ReviewsMarquee />
 
     {/* CTA */}
     <section className="py-20 bg-gradient-to-r from-primary to-[hsl(260,84%,60%)]">

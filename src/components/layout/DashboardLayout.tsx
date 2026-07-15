@@ -22,6 +22,7 @@ import {
   LifeBuoy,
   CreditCard,
   Linkedin,
+  Star,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
@@ -60,6 +61,7 @@ const NAV_ITEMS = [
   { title: "Analytics", url: "/analytics", icon: LineChart },
   { title: "Billing", url: "/billing", icon: CreditCard },
   { title: "Support", url: "/support", icon: LifeBuoy },
+  { title: "Leave a Review", url: "/leave-review", icon: Star },
 ];
 
 const INSIGHT_ITEMS = [

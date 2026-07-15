@@ -31,6 +31,7 @@ import {
   Circle,
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import ReviewPromptBanner from "@/components/ReviewPromptBanner";
 
 const iconContainer = "w-10 h-10 rounded-xl flex items-center justify-center shrink-0";
 
@@ -89,6 +90,9 @@ const Dashboard = () => {
         </h1>
         <p className="text-muted-foreground mt-1">Here's your career overview at a glance.</p>
       </div>
+
+      <ReviewPromptBanner />
+
 
       {/* Incomplete Profile Warning */}
       {isProfileIncomplete && (

@@ -418,6 +418,7 @@ export type Database = {
           graduation_year: number | null
           id: string
           interests: string[] | null
+          is_admin: boolean
           resume_url: string | null
           skills: string[] | null
         }
@@ -432,6 +433,7 @@ export type Database = {
           graduation_year?: number | null
           id?: string
           interests?: string[] | null
+          is_admin?: boolean
           resume_url?: string | null
           skills?: string[] | null
         }
@@ -446,6 +448,7 @@ export type Database = {
           graduation_year?: number | null
           id?: string
           interests?: string[] | null
+          is_admin?: boolean
           resume_url?: string | null
           skills?: string[] | null
         }
@@ -579,6 +582,48 @@ export type Database = {
           tech_stack?: string[] | null
           user_id?: string
           weaknesses?: string[] | null
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          approved_at: string | null
+          avatar_initials: string
+          created_at: string
+          id: string
+          name: string
+          quote: string
+          rating: number
+          role: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          avatar_initials: string
+          created_at?: string
+          id?: string
+          name: string
+          quote: string
+          rating: number
+          role?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          avatar_initials?: string
+          created_at?: string
+          id?: string
+          name?: string
+          quote?: string
+          rating?: number
+          role?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -778,7 +823,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
