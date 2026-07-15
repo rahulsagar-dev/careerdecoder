@@ -332,14 +332,12 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
-    const gate = await enforceUsage(userId, "skill-analysis", { increment: true });
+    const gate = await enforceUsage(userId, "skill-analysis", { increment: false });
     if (!gate.ok) return new Response(JSON.stringify(gate.body), { status: gate.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const { data: profile } = await supabase.from("profiles").select("skills, career_goal").eq("id", userId).single();
     const userSkills: string[] = profile?.skills || [];
     const userNorm = userSkills.map(normalize);
-
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     // Fetch career recommendations
     const { data: recommendations } = await supabase
@@ -355,6 +353,31 @@ serve(async (req) => {
     }
 
     const topCareerTitle = recommendations[0].career_title;
+
+    // Input-hash cache: skills + top careers => same analysis.
+    const inputHash = await hashInput({
+      skills: userSkills,
+      career_goal: profile?.career_goal || "",
+      careers: recommendations.map((r: any) => r.career_title),
+    });
+    const cachedAnalysis = await checkCache<any>("skill_analysis", userId, inputHash, 600);
+    if (cachedAnalysis) {
+      return new Response(JSON.stringify({ analysis: cachedAnalysis, cached: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const slot = await acquireSlot(userId, "skill-analysis");
+    if (!slot.ok) return busyResponse(slot.waitSeconds, corsHeaders);
+
+    const bump = await enforceUsage(userId, "skill-analysis", { increment: true });
+    if (!bump.ok) {
+      await releaseSlot(userId, "skill-analysis");
+      return new Response(JSON.stringify(bump.body), { status: bump.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+
 
     // Ask LLM to classify the skills
     let structuredSkills: Array<{ name: string; category: string; difficulty: string; is_critical: boolean }> = [];
