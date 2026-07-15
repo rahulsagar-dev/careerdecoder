@@ -10,6 +10,7 @@ import { useIsIndia } from "@/hooks/useIndiaGeo";
 import { billingService, loadRazorpay } from "@/services/billingService";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { SEO } from "@/components/SEO";
 
 const FREE_FEATURES = [
   "1 career recommendation run",
