@@ -28,13 +28,13 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const interval = body.interval === 'yearly' ? 'yearly' : 'monthly';
-    const planId = (interval === 'yearly'
-      ? Deno.env.get('RAZORPAY_PLAN_YEARLY')
-      : Deno.env.get('RAZORPAY_PLAN_MONTHLY'))?.trim();
+    const plan = interval === 'yearly'
+      ? { amount: 399900, label: 'Pro yearly plan' }
+      : { amount: 49900, label: 'Pro monthly plan' };
 
     const keyId = Deno.env.get('RAZORPAY_KEY_ID')?.trim();
     const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET')?.trim();
-    if (!planId || !keyId || !keySecret) {
+    if (!keyId || !keySecret) {
       return new Response(JSON.stringify({ error: 'Razorpay not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -44,40 +44,43 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Invalid Razorpay key format' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const totalCount = interval === 'yearly' ? 5 : 60; // 5 years or 5 years-worth of months
+    if (plan.amount < 100) {
+      return new Response(JSON.stringify({ error: 'Invalid payment amount' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
-    const rzpRes = await fetch('https://api.razorpay.com/v1/subscriptions', {
+    const receipt = `dmc_${interval}_${Date.now()}_${user.id.slice(0, 8)}`;
+    const rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
         'Authorization': 'Basic ' + btoa(`${keyId}:${keySecret}`),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        plan_id: planId,
-        total_count: totalCount,
-        customer_notify: 1,
-        notes: { user_id: user.id, email: user.email ?? '', interval },
+        amount: plan.amount,
+        currency: 'INR',
+        receipt,
+        notes: { user_id: user.id, email: user.email ?? '', interval, plan: plan.label },
       }),
     });
 
     const rzpJson = await rzpRes.json();
     if (!rzpRes.ok) {
-      console.error('Razorpay create subscription failed', rzpJson);
+      console.error('Razorpay create order failed', rzpJson);
       const razorpayMessage = rzpJson.error?.description || 'Razorpay error';
       const safeMessage = razorpayMessage === 'Authentication failed'
-        ? 'Razorpay authentication failed. Check that your Key ID, Key Secret, and Plan IDs are from the same Test/Live mode.'
+        ? 'Razorpay authentication failed. Check that your Key ID and Key Secret are from the same Test/Live mode.'
         : razorpayMessage;
       return new Response(JSON.stringify({ error: safeMessage }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Store pending subscription id so the webhook can match the paid Razorpay
-    // subscription back to this authenticated user. Use upsert because older
-    // accounts may not have a seeded free subscription row yet.
+    // Store the pending order id so the verification endpoint can match the
+    // Razorpay payment back to this authenticated user. Use upsert because
+    // older accounts may not have a seeded free subscription row yet.
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const { error: syncErr } = await admin.from('subscriptions').upsert({
       user_id: user.id,
       plan: 'free',
-      status: 'active',
+      status: 'incomplete',
       provider: 'razorpay',
       provider_subscription_id: rzpJson.id,
       billing_interval: interval,
@@ -90,7 +93,9 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
-      subscription_id: rzpJson.id,
+      order_id: rzpJson.id,
+      amount: rzpJson.amount,
+      currency: rzpJson.currency,
       key_id: keyId,
       interval,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
