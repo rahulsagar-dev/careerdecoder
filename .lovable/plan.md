@@ -1,132 +1,127 @@
-## Payments Plan — Stripe + Razorpay with Geo Routing
 
-### Approach
+# LinkedIn Analysis Feature — Full Plan
 
-Since your project uses external Supabase (not Lovable Cloud), Lovable's built-in payments won't work. Instead, we'll build a BYOK (bring-your-own-key) setup using edge functions — you keep your current Supabase, and I integrate both providers manually.
+Mirrors the existing Resume Analysis + GitHub Analysis patterns. User uploads their own LinkedIn "Save to PDF" export (ToS-safe), we parse it, and generate an AI analysis with strengths, weaknesses, and improvement suggestions.
 
-**Routing rule:** Detect user location → India goes to Razorpay (INR, UPI, cards, netbanking), everyone else goes to Stripe (USD/EUR, cards). One unified `subscriptions` table keeps state in sync regardless of provider.
+## 1. User Flow
 
----
+1. User navigates to `/linkedin-analysis` (new sidebar entry between Resume Analysis and GitHub Analysis).
+2. Page shows:
+   - Instructions panel: "How to export your LinkedIn PDF" — Profile → **More** → **Save to PDF** (current LinkedIn UI, verified).
+   - Upload dropzone (PDF only, ≤10MB).
+   - Privacy note: "Your LinkedIn PDF is processed to generate this analysis and is not shared with third parties. The file is discarded after parsing unless you enable history."
+3. On upload → `parse-linkedin` edge function extracts text → `generate-linkedin-analysis` edge function produces structured analysis → saved to `linkedin_analysis` table → rendered as cards.
+4. Past analyses list (like Resume Analysis history), with delete option.
+5. Feature is gated behind `check-usage-limit` (`linkedin-analysis`, 1 free/month, unlimited on Pro), enforced server-side via `enforceUsage.ts`.
 
-### 1. Pricing model (Free vs Pro)
+## 2. Database Schema (one migration)
 
-| Feature | Free | Pro |
-|---|---|---|
-| Career Recommendations | 1 generation | Unlimited |
-| Resume Analysis | 2 / month | Unlimited |
-| Skill Gap Analysis | 2 / month | Unlimited |
-| GitHub Analysis | 1 / month | Unlimited |
-| Interview Simulator | 3 sessions / month | Unlimited |
-| Career Report (PDF export) | ❌ | ✅ |
-| Market Intelligence | Basic | Full insights |
-| Learning Roadmap | 1 active | Unlimited |
+**New table: `linkedin_analysis`**
 
-Pricing (suggested — final numbers up to you):
-- Stripe: **$9.99/month** or **$79/year** (2 months free)
-- Razorpay: **₹499/month** or **₹3999/year**
+Fields (domain-specific):
+- `user_id` — owner
+- `headline_score`, `about_score`, `experience_score`, `skills_score`, `overall_score` — 0-100
+- `strengths` — jsonb array
+- `weaknesses` — jsonb array
+- `suggestions` — jsonb array (each with title, description, priority)
+- `keyword_gaps` — jsonb array (missing keywords vs target career)
+- `parsed_text` — text (raw extracted text, for debugging/regeneration)
+- `target_career` — text (optional, from profile)
+- Standard: id, created_at, updated_at
 
----
+**Access rules (RLS):**
+- Users can view/insert/update/delete only their own rows (`auth.uid() = user_id`).
+- `service_role` full access for edge functions.
 
-### 2. Database changes (one migration)
+**Usage counter:** No schema change — reuses existing `usage_counters` table with `feature = 'linkedin-analysis'`.
 
-New tables:
-- **`subscriptions`** — `user_id`, `provider` ('stripe' | 'razorpay'), `provider_customer_id`, `provider_subscription_id`, `plan` ('free' | 'pro'), `status` ('active' | 'canceled' | 'past_due' | 'trialing'), `current_period_end`, `cancel_at_period_end`, timestamps. RLS: user reads own, service_role writes.
-- **`usage_counters`** — `user_id`, `feature`, `count`, `period_start` (monthly reset). RLS: user reads own, service_role writes.
-- **`payment_events`** — audit log of every webhook event (`provider`, `event_type`, `payload`, `processed_at`). service_role only.
+**No new storage bucket.** PDFs are parsed in-memory in the edge function and never persisted (matches the privacy note). If the user later wants history of the raw file, we can add a private `linkedin-pdfs` bucket in a follow-up.
 
-Every user auto-gets a `free` row on signup (via existing profile trigger extension).
+## 3. Edge Functions
 
----
+Three new functions, all `verify_jwt` default (JWT-required):
 
-### 3. Edge functions (6 new)
+### `parse-linkedin`
+- Accepts `multipart/form-data` PDF upload.
+- Server-side validation: MIME `application/pdf`, size ≤10MB (matches resume audit).
+- Extracts text using **`unpdf`** (already used in `parse-resume` — Deno-compatible, works in edge runtime). Does NOT use `pdf-parse` (Node-only).
+- Returns `{ text, sections: { headline, about, experience, skills, education } }` — best-effort section splitting via heading regex.
+- Rate limit: enforced via `enforceUsage(userId, 'linkedin-analysis', { increment: false })` — pre-check only, real increment happens in generate step.
 
-| Function | Purpose |
-|---|---|
-| `detect-region` | Reads request IP via CF headers → returns `{ currency, provider }`. Fallback to browser locale. |
-| `create-stripe-checkout` | Creates Stripe Checkout Session for Pro monthly/yearly. Returns URL. |
-| `create-razorpay-order` | Creates Razorpay Subscription. Returns subscription_id + key for client SDK. |
-| `stripe-webhook` | Handles `checkout.session.completed`, `customer.subscription.updated/deleted`, `invoice.payment_failed`. Signature-verified. |
-| `razorpay-webhook` | Handles `subscription.activated/charged/cancelled/halted`. HMAC-verified. |
-| `check-usage-limit` | Called before AI-heavy features. Returns `{ allowed, remaining, plan }`. Increments counter. |
+### `generate-linkedin-analysis`
+- Body: `{ parsedText, sections, targetCareer? }`.
+- Calls `enforceUsage(userId, 'linkedin-analysis', { increment: true })` — atomic server-side gate.
+- Calls Lovable AI (`google/gemini-2.5-flash`) with a structured-output prompt returning:
+  ```
+  { overall_score, headline_score, about_score, experience_score, skills_score,
+    strengths[], weaknesses[], suggestions[{title, description, priority}],
+    keyword_gaps[] }
+  ```
+- Uses the user's profile's target career (from `profiles.target_career` or `career_recommendations`) to tailor keyword gaps.
+- Inserts row into `linkedin_analysis`, returns saved row.
 
-All webhooks use service_role internally (never exposed to client). Config: `verify_jwt = false` for webhook endpoints only.
+### (no third function) 
+Delete/list operations happen via direct Supabase client from the frontend under RLS — matches the pattern used by `resume_analysis`.
 
----
+## 4. Frontend
 
-### 4. Secrets required (I'll request via secure form)
+### New page: `src/pages/LinkedInAnalysisPage.tsx`
+- Layout matches `ResumeAnalysisPage`:
+  - Header + instructions accordion
+  - Upload card (react-dropzone) with client-side MIME/size check (defense in depth; server is authoritative)
+  - Progress states: uploading → parsing → analyzing → done
+  - Results view: score cards (overall + 4 sub-scores), strengths/weaknesses lists, prioritized suggestions, keyword gaps chips
+  - Past analyses list with delete
+- Wrapped with paywall error handling via `handleFeatureError` from `featureGate.ts` (opens `UpgradeModal` on limit/pro-only).
 
-- `STRIPE_SECRET_KEY` (sk_live_… or sk_test_…)
-- `STRIPE_WEBHOOK_SECRET` (whsec_…)
-- `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY` (price IDs from your Stripe dashboard)
-- `RAZORPAY_KEY_ID` (rzp_live_… or rzp_test_…)
-- `RAZORPAY_KEY_SECRET`
-- `RAZORPAY_WEBHOOK_SECRET`
-- `RAZORPAY_PLAN_MONTHLY`, `RAZORPAY_PLAN_YEARLY` (plan IDs)
+### New service: `src/services/linkedinService.ts`
+- `uploadAndParse(file)` → invokes `parse-linkedin`
+- `generateAnalysis(parsed, targetCareer)` → invokes `generate-linkedin-analysis`
+- `listAnalyses()`, `deleteAnalysis(id)` → direct Supabase queries
 
-Publishable Stripe key + Razorpay key_id also stored client-side (safe to expose).
+### Route & nav
+- Add `/linkedin-analysis` to `AppRoutes.tsx` under `<ProtectedRoute>`.
+- Add sidebar entry in `DashboardLayout.tsx` between "Resume Analysis" and "GitHub Analysis" (Linkedin icon from lucide-react).
 
----
+### Feature gating
+- Added to `FREE_LIMITS` in both `check-usage-limit/index.ts` and `_shared/enforceUsage.ts` as `'linkedin-analysis': 1`.
+- Frontend uses `gateFeature('linkedin-analysis')` for UX preview; server enforces atomically.
 
-### 5. Frontend
+## 5. Security & Privacy
 
-New pages/components:
-- **`/pricing`** — Free vs Pro comparison table. Auto-shows ₹ prices to Indian visitors, $ to everyone else. "Upgrade to Pro" button routes to the right provider.
-- **`/billing`** (in Dashboard) — Current plan, renewal date, "Manage subscription" (Stripe Customer Portal link / Razorpay dashboard link), cancel button.
-- **`<UpgradeGate />`** wrapper component — wraps limited features, shows "You've hit your Free limit — Upgrade" modal when `check-usage-limit` returns `allowed: false`.
-- **`<PlanBadge />`** in sidebar footer showing Free/Pro status.
-- Stripe: redirect to Checkout (hosted page — simplest & PCI-safe).
-- Razorpay: embed their JS SDK, open the modal on click, verify payment server-side after success.
+- Server-side MIME + size validation in `parse-linkedin` (matches recent audit fixes for resume/bug-screenshots).
+- No persistent storage of the raw PDF.
+- RLS on `linkedin_analysis` scoped to `auth.uid() = user_id`.
+- All AI calls server-side; `LOVABLE_API_KEY` never exposed.
+- CORS headers on both new functions.
 
-New service: `src/services/billingService.ts` — wraps all provider calls + usage checks.
+## 6. Out of Scope (explicit)
 
----
+- Scraping LinkedIn — forbidden by ToS.
+- Storing the uploaded PDF — deferred until user opts into history.
+- Comparing two users' profiles — not requested.
 
-### 6. Region detection logic
+## 7. Files Touched
 
-```text
-1. Edge function reads `cf-ipcountry` / `x-vercel-ip-country` header
-2. If IN → Razorpay (INR)
-3. Else check Accept-Language → if hi-IN/en-IN → Razorpay
-4. Else → Stripe (default USD)
-5. User can override on /pricing page ("Pay in USD instead")
-```
+**New:**
+- `supabase/functions/parse-linkedin/index.ts`
+- `supabase/functions/generate-linkedin-analysis/index.ts`
+- `src/pages/LinkedInAnalysisPage.tsx`
+- `src/services/linkedinService.ts`
+- 1 migration (creates `linkedin_analysis` table + grants + RLS)
 
----
+**Modified:**
+- `src/routes/AppRoutes.tsx` — new route
+- `src/components/layout/DashboardLayout.tsx` — sidebar entry
+- `supabase/functions/_shared/enforceUsage.ts` — add limit
+- `supabase/functions/check-usage-limit/index.ts` — add limit
 
-### 7. Integration into existing features
+## 8. Verification
 
-Gate these functions with `check-usage-limit` before running:
-- `generate-career-recommendations`
-- `generate-skill-analysis`
-- `analyze-github-profile`
-- `interview-chat` (per session start)
-- `parse-resume` + `score-resume`
-- `generate-career-report` (Pro only, hard gate)
+- Upload a sample LinkedIn PDF → confirm text extracts and analysis renders.
+- Try uploading a non-PDF → server rejects with 400.
+- Upload as free user twice in a month → second attempt opens `UpgradeModal`.
+- Pro user → unlimited.
+- Delete an analysis → row disappears (RLS enforced).
 
-Free users get a friendly upgrade prompt instead of running the AI call.
-
----
-
-### 8. What you need to do before I build
-
-1. **Create Stripe account** → get secret key + create a Product with monthly/yearly Prices → note the price IDs.
-2. **Create Razorpay account** (KYC required for live mode; test mode works immediately) → create a Plan for monthly + yearly → note plan IDs.
-3. **Set webhook endpoints** (I'll give you the exact URLs after deploy):
-   - Stripe: `https://voydvjkvsathgckzcjgp.supabase.co/functions/v1/stripe-webhook`
-   - Razorpay: `https://voydvjkvsathgckzcjgp.supabase.co/functions/v1/razorpay-webhook`
-4. Paste all 10 secrets into the secure form I'll open.
-
----
-
-### 9. Build order (once approved)
-
-1. Migration: `subscriptions`, `usage_counters`, `payment_events` + RLS + free-plan seed trigger
-2. Request all secrets
-3. Edge functions: `check-usage-limit` + `detect-region` first (unblocks gating)
-4. Stripe checkout + webhook
-5. Razorpay order + webhook
-6. Frontend: `/pricing`, `/billing`, `<UpgradeGate />`, sidebar badge
-7. Wire `<UpgradeGate />` into the 6 gated features
-8. Test both providers in test mode
-
-Ready to implement when you approve. Want to tweak the pricing or feature-limit split first?
+Approve to build.
