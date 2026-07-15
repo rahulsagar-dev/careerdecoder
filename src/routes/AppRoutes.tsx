@@ -63,6 +63,7 @@ const AppRoutes = () => (
     <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
     <Route path="/leave-review" element={<ProtectedRoute><LeaveReview /></ProtectedRoute>} />
     <Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
+    <Route path="/admin/inbox" element={<ProtectedRoute><AdminInbox /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
