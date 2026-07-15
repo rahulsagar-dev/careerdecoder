@@ -181,7 +181,7 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
-    const gate = await enforceUsage(userId, "career-recommendations", { increment: true });
+    const gate = await enforceUsage(userId, "career-recommendations", { increment: false });
     if (!gate.ok) return new Response(JSON.stringify(gate.body), { status: gate.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const { data: profile, error: profileError } = await supabase
@@ -192,6 +192,29 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Cache-by-input: same profile -> same recommendations, no AI call.
+    const inputHash = await hashInput({
+      skills: profile.skills || [],
+      interests: profile.interests || [],
+      career_goal: profile.career_goal || "",
+      degree: profile.degree || "",
+      education: profile.education || "",
+    });
+    const cached = await checkCache<any>("career_recommendations", userId, inputHash, 600);
+    if (cached) {
+      const { data: rows } = await supabase
+        .from("career_recommendations").select("*").eq("user_id", userId).eq("input_hash", inputHash)
+        .order("match_score", { ascending: false });
+      return new Response(JSON.stringify({ recommendations: rows || [], cached: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Prevent duplicate parallel jobs for the same user.
+    const slot = await acquireSlot(userId, "career-recommendations");
+    if (!slot.ok) return busyResponse(slot.waitSeconds, corsHeaders);
+
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
