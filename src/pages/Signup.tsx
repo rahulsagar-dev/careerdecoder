@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -18,8 +20,16 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [siteKey, setSiteKey] = useState<string>("");
+  const [captchaToken, setCaptchaToken] = useState<string>("");
   const { signUp } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.functions.invoke("turnstile-config").then(({ data }) => {
+      if (data?.siteKey) setSiteKey(data.siteKey);
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,9 +37,20 @@ const Signup = () => {
     if (!emailRe.test(email)) return toast.error("Please enter a valid email");
     if (password.length < 8) return toast.error("Password must be at least 8 characters");
     if (password !== confirmPassword) return toast.error("Passwords do not match");
+    if (siteKey && !captchaToken) return toast.error("Please complete the human verification");
 
     setIsLoading(true);
     try {
+      if (siteKey) {
+        const { data: verify, error: verifyErr } = await supabase.functions.invoke("verify-turnstile", {
+          body: { token: captchaToken },
+        });
+        if (verifyErr || !verify?.success) {
+          setCaptchaToken("");
+          (window as any).turnstile?.reset?.();
+          throw new Error("Human verification failed. Please try again.");
+        }
+      }
       await signUp(email, password, fullName);
       toast.success("Account created! Check your email to verify.");
       navigate("/profile/setup");
@@ -39,6 +60,7 @@ const Signup = () => {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-8">
@@ -73,7 +95,10 @@ const Signup = () => {
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input id="confirmPassword" type={showPassword ? "text" : "password"} placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={isLoading} autoComplete="new-password" />
             </div>
-            <Button type="submit" className="w-full bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] hover:opacity-90 transition-opacity" disabled={isLoading}>
+            {siteKey && (
+              <TurnstileWidget siteKey={siteKey} onToken={setCaptchaToken} onExpire={() => setCaptchaToken("")} />
+            )}
+            <Button type="submit" className="w-full bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] hover:opacity-90 transition-opacity" disabled={isLoading || (!!siteKey && !captchaToken)}>
               {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating Account...</> : "Create Account"}
             </Button>
             <p className="text-xs text-center text-muted-foreground leading-relaxed">
