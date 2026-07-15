@@ -27,6 +27,7 @@ import Billing from "@/pages/Billing";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import LeaveReview from "@/pages/LeaveReview";
 import AdminReviews from "@/pages/AdminReviews";
+import AdminInbox from "@/pages/AdminInbox";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 
@@ -62,6 +63,7 @@ const AppRoutes = () => (
     <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
     <Route path="/leave-review" element={<ProtectedRoute><LeaveReview /></ProtectedRoute>} />
     <Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
+    <Route path="/admin/inbox" element={<ProtectedRoute><AdminInbox /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
