@@ -216,14 +216,19 @@ serve(async (req) => {
     if (!slot.ok) return busyResponse(slot.waitSeconds, corsHeaders);
 
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "AI service not configured" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    try {
+      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+      if (!LOVABLE_API_KEY) {
+        return new Response(JSON.stringify({ error: "AI service not configured" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
-    const systemPrompt = `You are a career counselor AI. Analyze the user's profile and suggest 5-7 relevant career paths.
+      // Increment usage counter only right before the actual AI call.
+      const bump = await enforceUsage(userId, "career-recommendations", { increment: true });
+      if (!bump.ok) return new Response(JSON.stringify(bump.body), { status: bump.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      const systemPrompt = `You are a career counselor AI. Analyze the user's profile and suggest 5-7 relevant career paths.
 
 For each career, return structured skill data. Do NOT compute match_score — it will be calculated server-side.
 
@@ -235,7 +240,7 @@ Each required_skill must include:
 
 Be specific and realistic. Return your response by calling the provided function.`;
 
-    const userPrompt = `User Profile:
+      const userPrompt = `User Profile:
 - Name: ${profile.full_name || "Unknown"}
 - Education: ${profile.education || "Not specified"}
 - Degree: ${profile.degree || "Not specified"}
@@ -244,137 +249,132 @@ Be specific and realistic. Return your response by calling the provided function
 - Interests: ${(profile.interests || []).join(", ") || "None"}
 - Career Goal: ${profile.career_goal || "Not specified"}`;
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "suggest_careers",
-            description: "Return 5-7 career recommendations with structured skill data",
-            parameters: {
-              type: "object",
-              properties: {
-                careers: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      career_title: { type: "string" },
-                      description: { type: "string" },
-                      salary_range: { type: "string" },
-                      required_skills: {
-                        type: "array",
-                        items: {
-                          type: "object",
-                          properties: {
-                            name: { type: "string" },
-                            category: { type: "string", enum: ["core", "secondary", "optional"] },
-                            difficulty: { type: "string", enum: ["beginner", "intermediate", "advanced"] },
-                            is_critical: { type: "boolean" },
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          tools: [{
+            type: "function",
+            function: {
+              name: "suggest_careers",
+              description: "Return 5-7 career recommendations with structured skill data",
+              parameters: {
+                type: "object",
+                properties: {
+                  careers: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        career_title: { type: "string" },
+                        description: { type: "string" },
+                        salary_range: { type: "string" },
+                        required_skills: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              name: { type: "string" },
+                              category: { type: "string", enum: ["core", "secondary", "optional"] },
+                              difficulty: { type: "string", enum: ["beginner", "intermediate", "advanced"] },
+                              is_critical: { type: "boolean" },
+                            },
+                            required: ["name", "category", "difficulty", "is_critical"],
+                            additionalProperties: false,
                           },
-                          required: ["name", "category", "difficulty", "is_critical"],
-                          additionalProperties: false,
                         },
                       },
+                      required: ["career_title", "description", "salary_range", "required_skills"],
+                      additionalProperties: false,
                     },
-                    required: ["career_title", "description", "salary_range", "required_skills"],
-                    additionalProperties: false,
                   },
                 },
+                required: ["careers"],
+                additionalProperties: false,
               },
-              required: ["careers"],
-              additionalProperties: false,
             },
-          },
-        }],
-        tool_choice: { type: "function", function: { name: "suggest_careers" } },
-      }),
-    });
+          }],
+          tool_choice: { type: "function", function: { name: "suggest_careers" } },
+        }),
+      });
 
-    if (!aiResponse.ok) {
-      if (aiResponse.status === 429) {
-        return new Response(JSON.stringify({ error: "AI rate limit exceeded. Please try again later." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      if (!aiResponse.ok) {
+        if (aiResponse.status === 429) {
+          return new Response(JSON.stringify({ error: "AI rate limit exceeded. Please try again later." }), {
+            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (aiResponse.status === 402) {
+          return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds." }), {
+            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const errText = await aiResponse.text();
+        console.error("AI error:", aiResponse.status, errText);
+        return new Response(JSON.stringify({ error: "AI service error" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (aiResponse.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+
+      const aiData = await aiResponse.json();
+      const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+      if (!toolCall?.function?.arguments) {
+        console.error("No tool call in AI response:", JSON.stringify(aiData));
+        return new Response(JSON.stringify({ error: "Failed to parse AI response" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const errText = await aiResponse.text();
-      console.error("AI error:", aiResponse.status, errText);
-      return new Response(JSON.stringify({ error: "AI service error" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+
+      const parsed = JSON.parse(toolCall.function.arguments);
+      const careers: LLMCareer[] = parsed.careers;
+      const userSkills: string[] = profile.skills || [];
+
+      const rows = careers.map((c) => {
+        const { finalScore, missingSkills } = computeScore(userSkills, c);
+        return {
+          user_id: userId,
+          career_title: c.career_title,
+          match_score: finalScore,
+          required_skills: c.required_skills.map((s) => s.name),
+          missing_skills: missingSkills,
+          description: c.description || "",
+          salary_range: c.salary_range || "",
+          input_hash: inputHash,
+        };
       });
-    }
 
-    const aiData = await aiResponse.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall?.function?.arguments) {
-      console.error("No tool call in AI response:", JSON.stringify(aiData));
-      return new Response(JSON.stringify({ error: "Failed to parse AI response" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      rows.sort((a, b) => b.match_score - a.match_score);
+
+      await supabase.from("career_recommendations").delete().eq("user_id", userId);
+
+      const { data: inserted, error: insertError } = await supabase
+        .from("career_recommendations").insert(rows).select();
+
+      if (insertError) {
+        console.error("Insert error:", insertError);
+        return new Response(JSON.stringify({ error: "Failed to store recommendations" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const extendedRecommendations = (inserted || []).map((rec: Record<string, unknown>, i: number) => {
+        const career = careers[i];
+        if (!career) return rec;
+        const { matchedSkills, skillGapDetails } = computeScore(userSkills, career);
+        return { ...rec, matched_skills: matchedSkills, skill_gap_details: skillGapDetails };
       });
-    }
 
-    const parsed = JSON.parse(toolCall.function.arguments);
-    const careers: LLMCareer[] = parsed.careers;
-    const userSkills: string[] = profile.skills || [];
-
-    // ── Compute scores & gap details server-side ──
-    const rows = careers.map((c) => {
-      const { finalScore, matchedSkills, missingSkills } = computeScore(userSkills, c);
-      return {
-        user_id: userId,
-        career_title: c.career_title,
-        match_score: finalScore,
-        required_skills: c.required_skills.map((s) => s.name),
-        missing_skills: missingSkills,
-        description: c.description || "",
-        salary_range: c.salary_range || "",
-      };
-    });
-
-    rows.sort((a, b) => b.match_score - a.match_score);
-
-    await supabase.from("career_recommendations").delete().eq("user_id", userId);
-
-    const { data: inserted, error: insertError } = await supabase
-      .from("career_recommendations").insert(rows).select();
-
-    if (insertError) {
-      console.error("Insert error:", insertError);
-      return new Response(JSON.stringify({ error: "Failed to store recommendations" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ recommendations: extendedRecommendations }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    } finally {
+      await releaseSlot(userId, "career-recommendations");
     }
-
-    // Build extended response with skill_gap_details per career
-    const extendedRecommendations = (inserted || []).map((rec: Record<string, unknown>, i: number) => {
-      const career = careers[i];
-      if (!career) return rec;
-      const { matchedSkills, skillGapDetails } = computeScore(userSkills, career);
-      return {
-        ...rec,
-        matched_skills: matchedSkills,
-        skill_gap_details: skillGapDetails,
-      };
-    });
-
-    return new Response(JSON.stringify({ recommendations: extendedRecommendations }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   } catch (e) {
     console.error("Error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
@@ -382,3 +382,4 @@ Be specific and realistic. Return your response by calling the provided function
     });
   }
 });
+
