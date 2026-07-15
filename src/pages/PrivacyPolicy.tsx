@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Printer, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/layout/Footer";
+import { SEO } from "@/components/SEO";
 
 const SECTIONS = [
   { id: "introduction", title: "1. Introduction", body: "Career Decode (\"we\", \"us\") operates an AI-powered career guidance platform. This Privacy Policy explains what data we collect, how we use it, and the choices you have." },
@@ -18,7 +19,8 @@ const SECTIONS = [
 
 const PrivacyPolicy = () => (
   <div className="min-h-screen flex flex-col bg-background">
-    <div className="container max-w-3xl py-10 flex-1">
+    <SEO title="Privacy Policy — Career Decode" description="How Career Decode collects, uses, and protects your personal data." path="/privacy-policy" />
+    <main className="container max-w-3xl py-10 flex-1">
       <Button variant="ghost" size="sm" asChild className="mb-4">
         <Link to="/"><ArrowLeft className="h-4 w-4 mr-1" /> Back</Link>
       </Button>
@@ -50,7 +52,7 @@ const PrivacyPolicy = () => (
           </section>
         ))}
       </article>
-    </div>
+    </main>
     <Footer />
   </div>
 );
