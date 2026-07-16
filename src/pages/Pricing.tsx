@@ -17,15 +17,17 @@ const FREE_FEATURES = [
   "2 resume analyses / month",
   "2 skill gap analyses / month",
   "1 GitHub analysis / month",
-  "3 interview sessions / month",
+  "1 LinkedIn profile analysis / month",
   "Basic market intelligence",
+  "AI Interview Simulator — Pro only",
 ];
 
 const PRO_FEATURES = [
   "Unlimited career recommendations",
   "Unlimited resume & skill analyses",
   "Unlimited GitHub analyses",
-  "Unlimited interview simulations",
+  "Unlimited LinkedIn profile analyses",
+  "Unlimited AI interview simulations (Pro exclusive)",
   "Full market intelligence insights",
   "Career report PDF export",
   "Priority support",
