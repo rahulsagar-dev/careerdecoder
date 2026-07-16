@@ -64,7 +64,7 @@ export async function enforceUsage(
   if (isPro) return { ok: true, plan };
 
   // Pro-only hard gate.
-  if (feature === "career-report") {
+  if (feature === "career-report" || feature === "interview-session") {
     return {
       ok: false,
       status: 402,
