@@ -126,12 +126,40 @@ const InterviewSimulatorPage = () => {
     { label: "Confidence", value: result.feedback.confidence, weight: "15%", icon: Trophy },
   ] : [];
 
+  const { isPro, loading: subLoading } = useSubscription();
+
+  if (!subLoading && !isPro) {
+    return (
+      <DashboardLayout>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">AI Interview Simulator</h1>
+          <p className="text-muted-foreground mt-1">Practice interviews with adaptive AI feedback</p>
+        </div>
+        <Card className="rounded-2xl shadow-sm border mt-6 max-w-2xl mx-auto">
+          <CardContent className="p-10 text-center space-y-4">
+            <div className="mx-auto w-14 h-14 rounded-full bg-gradient-to-br from-primary to-[hsl(260,84%,60%)] flex items-center justify-center">
+              <Lock className="w-7 h-7 text-white" />
+            </div>
+            <h2 className="text-2xl font-semibold">Pro-only feature</h2>
+            <p className="text-muted-foreground">
+              The AI Interview Simulator is available exclusively on the Pro plan. Upgrade to run adaptive HR, Technical, and Behavioral interviews with detailed evaluation.
+            </p>
+            <Button asChild className="bg-gradient-to-r from-primary to-[hsl(260,84%,60%)]">
+              <Link to="/pricing"><Sparkles className="w-4 h-4 mr-2" /> Upgrade to Pro</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div>
         <h1 className="text-3xl font-bold text-foreground">AI Interview Simulator</h1>
         <p className="text-muted-foreground mt-1">Practice interviews with adaptive AI feedback</p>
       </div>
+
 
       {!sessionId ? (
         <Card className="rounded-2xl shadow-sm border">
