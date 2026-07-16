@@ -11,8 +11,10 @@ import { handleFeatureError } from "@/services/featureGate";
 import ReactMarkdown from "react-markdown";
 import {
   Loader2, MessageSquare, Send, CheckCircle2, Brain, Users, Briefcase, Trophy,
-  AlertTriangle, Lightbulb, XCircle, ClipboardList, ArrowUp, ArrowDown, Minus,
+  AlertTriangle, Lightbulb, XCircle, ClipboardList, ArrowUp, ArrowDown, Minus, Lock, Sparkles,
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const MODES = [
   { value: "HR", label: "HR Interview", icon: Users, description: "Behavioral & personality" },
