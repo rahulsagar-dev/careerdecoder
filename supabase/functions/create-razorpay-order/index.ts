@@ -66,22 +66,16 @@ Deno.serve(async (req) => {
         periodEnd.setUTCDate(periodEnd.getUTCDate() + 30);
       }
 
-      const redeemed = await admin.rpc('redeem_promo', {
-        _code_id: promo.code.id,
-        _user_id: user.id,
-        _order_id: null,
-        _discount_paise: promo.discount_paise,
-      }, { schema: 'private' } as any);
-      // Fallback: some clients don't accept schema option; call by full name.
-      const finalRedeemed = redeemed.error
-        ? await admin.schema('private' as any).rpc('redeem_promo', {
-            _code_id: promo.code.id,
-            _user_id: user.id,
-            _order_id: null,
-            _discount_paise: promo.discount_paise,
-          })
-        : redeemed;
-      if (finalRedeemed.error || finalRedeemed.data === false) {
+      const { data: redeemOk, error: redeemErr } = await (admin as any)
+        .schema('private')
+        .rpc('redeem_promo', {
+          _code_id: promo.code.id,
+          _user_id: user.id,
+          _order_id: null,
+          _discount_paise: promo.discount_paise,
+        });
+      if (redeemErr || redeemOk === false) {
+        console.error('redeem_promo failed', redeemErr);
         return json({ error: 'Could not redeem code. Please try again.' }, 409);
       }
 
