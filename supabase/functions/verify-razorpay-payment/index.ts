@@ -89,6 +89,34 @@ Deno.serve(async (req) => {
       payload: { order_id: orderId, payment_id: paymentId, interval },
     }, { onConflict: 'provider,event_id', ignoreDuplicates: true });
 
+    // If this order was created with a promo code, redeem it now.
+    try {
+      const keyIdForFetch = Deno.env.get('RAZORPAY_KEY_ID')?.trim();
+      const keySecretForFetch = Deno.env.get('RAZORPAY_KEY_SECRET')?.trim();
+      if (keyIdForFetch && keySecretForFetch) {
+        const orderRes = await fetch(`https://api.razorpay.com/v1/orders/${orderId}`, {
+          headers: { 'Authorization': 'Basic ' + btoa(`${keyIdForFetch}:${keySecretForFetch}`) },
+        });
+        if (orderRes.ok) {
+          const orderJson = await orderRes.json();
+          const notes = orderJson?.notes ?? {};
+          if (notes.promo_code_id) {
+            const { error: redeemErr } = await (admin as any)
+              .schema('private')
+              .rpc('redeem_promo', {
+                _code_id: notes.promo_code_id,
+                _user_id: user.id,
+                _order_id: orderId,
+                _discount_paise: Number(notes.discount_paise || 0),
+              });
+            if (redeemErr) console.error('redeem_promo (paid) failed', redeemErr);
+          }
+        }
+      }
+    } catch (redeemE) {
+      console.error('promo redemption post-payment error', redeemE);
+    }
+
     const { error: syncErr } = await admin.from('subscriptions').upsert({
       user_id: user.id,
       plan: 'pro',
