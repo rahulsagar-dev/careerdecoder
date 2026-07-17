@@ -178,11 +178,11 @@ const Pricing = () => {
           <div className="flex justify-center mb-8">
             <div className="inline-flex rounded-full bg-muted p-1">
               <button
-                onClick={() => setInterval("monthly")}
+                onClick={() => onIntervalChange("monthly")}
                 className={`px-5 py-2 rounded-full text-sm font-medium transition ${interval === "monthly" ? "bg-background shadow" : ""}`}
               >Monthly</button>
               <button
-                onClick={() => setInterval("yearly")}
+                onClick={() => onIntervalChange("yearly")}
                 className={`px-5 py-2 rounded-full text-sm font-medium transition ${interval === "yearly" ? "bg-background shadow" : ""}`}
               >Yearly <Badge variant="secondary" className="ml-2">Save 33%</Badge></button>
             </div>
