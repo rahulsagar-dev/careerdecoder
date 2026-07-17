@@ -101,8 +101,7 @@ Deno.serve(async (req) => {
           const orderJson = await orderRes.json();
           const notes = orderJson?.notes ?? {};
           if (notes.promo_code_id) {
-            const { error: redeemErr } = await (admin as any)
-              .schema('private')
+            const { error: redeemErr } = await admin
               .rpc('redeem_promo', {
                 _code_id: notes.promo_code_id,
                 _user_id: user.id,
