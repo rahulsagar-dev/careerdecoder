@@ -978,7 +978,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      redeem_promo: {
+        Args: {
+          _code_id: string
+          _discount_paise: number
+          _order_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
