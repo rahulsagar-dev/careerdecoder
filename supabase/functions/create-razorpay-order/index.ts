@@ -66,12 +66,11 @@ Deno.serve(async (req) => {
         periodEnd.setUTCDate(periodEnd.getUTCDate() + 30);
       }
 
-      const { data: redeemOk, error: redeemErr } = await (admin as any)
-        .schema('private')
+      const { data: redeemOk, error: redeemErr } = await admin
         .rpc('redeem_promo', {
           _code_id: promo.code.id,
           _user_id: user.id,
-          _order_id: null,
+          _order_id: `free_${Date.now()}_${user.id.slice(0, 8)}`,
           _discount_paise: promo.discount_paise,
         });
       if (redeemErr || redeemOk === false) {
