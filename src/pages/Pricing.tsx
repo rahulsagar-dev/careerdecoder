@@ -41,9 +41,64 @@ const Pricing = () => {
   const navigate = useNavigate();
   const [interval, setInterval] = useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [applyingPromo, setApplyingPromo] = useState(false);
+  const [applied, setApplied] = useState<{
+    code: string;
+    final_amount_paise: number;
+    base_amount_paise: number;
+    discount_paise: number;
+    is_free: boolean;
+    discount_type: string;
+    discount_value: number;
+    extension_days: number;
+  } | null>(null);
 
-  const price = interval === "monthly" ? "₹499" : "₹3,999";
+  const formatINR = (paise: number) =>
+    `₹${(paise / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+
+  const basePaise = interval === "monthly" ? 49900 : 399900;
+  const price = formatINR(basePaise);
   const suffix = interval === "monthly" ? "/mo" : "/yr";
+
+  // Clear applied code when interval changes and it's plan-restricted or reprice.
+  const onIntervalChange = (v: "monthly" | "yearly") => {
+    setInterval(v);
+    if (applied) setApplied(null);
+  };
+
+  const applyPromo = async () => {
+    const code = promoInput.trim();
+    if (!code) return;
+    if (!user) {
+      navigate("/login?redirect=/pricing");
+      return;
+    }
+    setApplyingPromo(true);
+    try {
+      const res = await billingService.validatePromo(code, interval);
+      setApplied({
+        code: res.code,
+        final_amount_paise: res.final_amount_paise,
+        base_amount_paise: res.base_amount_paise,
+        discount_paise: res.discount_paise,
+        is_free: res.is_free,
+        discount_type: res.discount_type,
+        discount_value: res.discount_value,
+        extension_days: res.extension_days,
+      });
+      toast.success("Code applied");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
+
+  const removePromo = () => {
+    setApplied(null);
+    setPromoInput("");
+  };
 
   const handleUpgrade = async () => {
     if (authLoading) return;
@@ -54,17 +109,26 @@ const Pricing = () => {
     }
     setLoading(true);
     try {
+      const res = await billingService.createSubscription(interval, applied?.code);
+
+      // Free path (100% off / free extension / free upgrade) — no Razorpay.
+      if (res.free) {
+        toast.success("Pro activated!");
+        await refresh();
+        navigate("/payment-success");
+        return;
+      }
+
       const ok = await loadRazorpay();
       if (!ok) throw new Error("Failed to load Razorpay");
-      const { order_id, amount, currency, key_id } = await billingService.createSubscription(interval);
 
       const rzp = new (window as any).Razorpay({
-        key: key_id,
-        order_id,
-        amount,
-        currency,
+        key: res.key_id,
+        order_id: res.order_id,
+        amount: res.amount,
+        currency: res.currency,
         name: "Decode My Career",
-        description: `Pro ${interval} plan`,
+        description: `Pro ${interval} plan${applied ? ` (${applied.code})` : ""}`,
         prefill: { email: user.email },
         theme: { color: "#4f46e5" },
         handler: async (response: {
