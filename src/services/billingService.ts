@@ -1,16 +1,49 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const billingService = {
-  async createSubscription(interval: "monthly" | "yearly") {
+  async createSubscription(interval: "monthly" | "yearly", code?: string) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error("Not authenticated");
     const { data, error } = await supabase.functions.invoke("create-razorpay-order", {
       headers: { Authorization: `Bearer ${session.access_token}` },
-      body: { interval },
+      body: { interval, code: code?.trim() || undefined },
     });
     if (error) throw new Error(await getFunctionErrorMessage(error));
     if (data?.error) throw new Error(data.error);
-    return data as { order_id: string; amount: number; currency: string; key_id: string; interval: string };
+    return data as {
+      order_id?: string;
+      amount?: number;
+      currency?: string;
+      key_id?: string;
+      interval: string;
+      free?: boolean;
+      plan?: string;
+      current_period_end?: string;
+      code?: string | null;
+      discount_paise?: number;
+    };
+  },
+
+  async validatePromo(code: string, interval: "monthly" | "yearly") {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error("Not authenticated");
+    const { data, error } = await supabase.functions.invoke("validate-promo-code", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+      body: { code, interval },
+    });
+    if (error) throw new Error(await getFunctionErrorMessage(error));
+    if (data?.error || data?.valid === false) throw new Error(data?.error || "Invalid code");
+    return data as {
+      valid: true;
+      code: string;
+      discount_type: "percent" | "flat" | "free_extension" | "free_upgrade";
+      discount_value: number;
+      base_amount_paise: number;
+      final_amount_paise: number;
+      discount_paise: number;
+      is_free: boolean;
+      extension_days: number;
+    };
   },
 
   async verifyPayment(payload: {

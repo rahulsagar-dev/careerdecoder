@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Check, Sparkles, Loader2 } from "lucide-react";
+import { Check, Sparkles, Loader2, Tag, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -40,9 +41,64 @@ const Pricing = () => {
   const navigate = useNavigate();
   const [interval, setInterval] = useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [applyingPromo, setApplyingPromo] = useState(false);
+  const [applied, setApplied] = useState<{
+    code: string;
+    final_amount_paise: number;
+    base_amount_paise: number;
+    discount_paise: number;
+    is_free: boolean;
+    discount_type: string;
+    discount_value: number;
+    extension_days: number;
+  } | null>(null);
 
-  const price = interval === "monthly" ? "₹499" : "₹3,999";
+  const formatINR = (paise: number) =>
+    `₹${(paise / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+
+  const basePaise = interval === "monthly" ? 49900 : 399900;
+  const price = formatINR(basePaise);
   const suffix = interval === "monthly" ? "/mo" : "/yr";
+
+  // Clear applied code when interval changes and it's plan-restricted or reprice.
+  const onIntervalChange = (v: "monthly" | "yearly") => {
+    setInterval(v);
+    if (applied) setApplied(null);
+  };
+
+  const applyPromo = async () => {
+    const code = promoInput.trim();
+    if (!code) return;
+    if (!user) {
+      navigate("/login?redirect=/pricing");
+      return;
+    }
+    setApplyingPromo(true);
+    try {
+      const res = await billingService.validatePromo(code, interval);
+      setApplied({
+        code: res.code,
+        final_amount_paise: res.final_amount_paise,
+        base_amount_paise: res.base_amount_paise,
+        discount_paise: res.discount_paise,
+        is_free: res.is_free,
+        discount_type: res.discount_type,
+        discount_value: res.discount_value,
+        extension_days: res.extension_days,
+      });
+      toast.success("Code applied");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
+
+  const removePromo = () => {
+    setApplied(null);
+    setPromoInput("");
+  };
 
   const handleUpgrade = async () => {
     if (authLoading) return;
@@ -53,17 +109,26 @@ const Pricing = () => {
     }
     setLoading(true);
     try {
+      const res = await billingService.createSubscription(interval, applied?.code);
+
+      // Free path (100% off / free extension / free upgrade) — no Razorpay.
+      if (res.free) {
+        toast.success("Pro activated!");
+        await refresh();
+        navigate("/payment-success");
+        return;
+      }
+
       const ok = await loadRazorpay();
       if (!ok) throw new Error("Failed to load Razorpay");
-      const { order_id, amount, currency, key_id } = await billingService.createSubscription(interval);
 
       const rzp = new (window as any).Razorpay({
-        key: key_id,
-        order_id,
-        amount,
-        currency,
+        key: res.key_id,
+        order_id: res.order_id,
+        amount: res.amount,
+        currency: res.currency,
         name: "Decode My Career",
-        description: `Pro ${interval} plan`,
+        description: `Pro ${interval} plan${applied ? ` (${applied.code})` : ""}`,
         prefill: { email: user.email },
         theme: { color: "#4f46e5" },
         handler: async (response: {
@@ -113,11 +178,11 @@ const Pricing = () => {
           <div className="flex justify-center mb-8">
             <div className="inline-flex rounded-full bg-muted p-1">
               <button
-                onClick={() => setInterval("monthly")}
+                onClick={() => onIntervalChange("monthly")}
                 className={`px-5 py-2 rounded-full text-sm font-medium transition ${interval === "monthly" ? "bg-background shadow" : ""}`}
               >Monthly</button>
               <button
-                onClick={() => setInterval("yearly")}
+                onClick={() => onIntervalChange("yearly")}
                 className={`px-5 py-2 rounded-full text-sm font-medium transition ${interval === "yearly" ? "bg-background shadow" : ""}`}
               >Yearly <Badge variant="secondary" className="ml-2">Save 33%</Badge></button>
             </div>
@@ -153,8 +218,57 @@ const Pricing = () => {
                 <h2 className="text-2xl font-bold">Pro</h2>
                 {isPro && <Badge>Current Plan</Badge>}
               </div>
-              <p className="text-4xl font-bold mb-1">{price}<span className="text-base font-normal text-muted-foreground">{suffix}</span></p>
-              <p className="text-sm text-muted-foreground mb-6">Everything you need to land your dream role.</p>
+              {applied ? (
+                <div className="mb-1">
+                  <p className="text-4xl font-bold">
+                    {applied.is_free && applied.discount_type !== "free_extension"
+                      ? "Free"
+                      : formatINR(applied.final_amount_paise)}
+                    {!applied.is_free || applied.discount_type === "free_extension" ? (
+                      <span className="text-base font-normal text-muted-foreground">{suffix}</span>
+                    ) : null}
+                  </p>
+                  <p className="text-sm text-muted-foreground line-through">{price}{suffix}</p>
+                </div>
+              ) : (
+                <p className="text-4xl font-bold mb-1">{price}<span className="text-base font-normal text-muted-foreground">{suffix}</span></p>
+              )}
+              <p className="text-sm text-muted-foreground mb-4">Everything you need to land your dream role.</p>
+
+              {!isPro && (
+                <div className="mb-4">
+                  {applied ? (
+                    <div className="flex items-center justify-between rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm">
+                      <span className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                        <Tag className="w-4 h-4" /> <span className="font-mono font-semibold">{applied.code}</span> applied
+                        {applied.discount_type === "free_extension" && ` — +${applied.extension_days} days free`}
+                      </span>
+                      <button onClick={removePromo} className="text-muted-foreground hover:text-foreground">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Promo code"
+                        value={promoInput}
+                        onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                        className="h-9 font-mono"
+                        maxLength={40}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={applyPromo}
+                        disabled={applyingPromo || !promoInput.trim()}
+                      >
+                        {applyingPromo ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <ul className="space-y-3 mb-6">
                 {PRO_FEATURES.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-sm">
@@ -168,18 +282,24 @@ const Pricing = () => {
                 </Button>
               ) : geoLoading || authLoading || subscriptionLoading ? (
                 <Button className="w-full" disabled><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading…</Button>
-              ) : canPay ? (
+              ) : canPay || (applied && applied.is_free) ? (
                 <Button
                   onClick={handleUpgrade}
                   disabled={checkoutLoading}
                   className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:opacity-90"
                 >
-                  {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Opening checkout…</> : "Upgrade to Pro"}
+                  {loading ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing…</>
+                  ) : applied?.is_free ? (
+                    "Redeem & activate Pro"
+                  ) : (
+                    "Upgrade to Pro"
+                  )}
                 </Button>
               ) : (
                 <Button className="w-full" disabled variant="outline">International payments coming soon</Button>
               )}
-              {!canPay && !geoLoading && (
+              {!canPay && !geoLoading && !(applied && applied.is_free) && (
                 <p className="text-xs text-muted-foreground mt-2 text-center">We currently accept payments from India only. Global support is on the way.</p>
               )}
             </div>

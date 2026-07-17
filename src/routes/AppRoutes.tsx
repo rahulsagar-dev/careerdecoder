@@ -28,6 +28,7 @@ import PaymentSuccess from "@/pages/PaymentSuccess";
 import LeaveReview from "@/pages/LeaveReview";
 import AdminReviews from "@/pages/AdminReviews";
 import AdminInbox from "@/pages/AdminInbox";
+import AdminPromoCodes from "@/pages/AdminPromoCodes";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 
@@ -64,6 +65,7 @@ const AppRoutes = () => (
     <Route path="/leave-review" element={<ProtectedRoute><LeaveReview /></ProtectedRoute>} />
     <Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
     <Route path="/admin/inbox" element={<ProtectedRoute><AdminInbox /></ProtectedRoute>} />
+    <Route path="/admin/promo-codes" element={<ProtectedRoute><AdminPromoCodes /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
