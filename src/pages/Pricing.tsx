@@ -218,8 +218,57 @@ const Pricing = () => {
                 <h2 className="text-2xl font-bold">Pro</h2>
                 {isPro && <Badge>Current Plan</Badge>}
               </div>
-              <p className="text-4xl font-bold mb-1">{price}<span className="text-base font-normal text-muted-foreground">{suffix}</span></p>
-              <p className="text-sm text-muted-foreground mb-6">Everything you need to land your dream role.</p>
+              {applied ? (
+                <div className="mb-1">
+                  <p className="text-4xl font-bold">
+                    {applied.is_free && applied.discount_type !== "free_extension"
+                      ? "Free"
+                      : formatINR(applied.final_amount_paise)}
+                    {!applied.is_free || applied.discount_type === "free_extension" ? (
+                      <span className="text-base font-normal text-muted-foreground">{suffix}</span>
+                    ) : null}
+                  </p>
+                  <p className="text-sm text-muted-foreground line-through">{price}{suffix}</p>
+                </div>
+              ) : (
+                <p className="text-4xl font-bold mb-1">{price}<span className="text-base font-normal text-muted-foreground">{suffix}</span></p>
+              )}
+              <p className="text-sm text-muted-foreground mb-4">Everything you need to land your dream role.</p>
+
+              {!isPro && (
+                <div className="mb-4">
+                  {applied ? (
+                    <div className="flex items-center justify-between rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm">
+                      <span className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                        <Tag className="w-4 h-4" /> <span className="font-mono font-semibold">{applied.code}</span> applied
+                        {applied.discount_type === "free_extension" && ` — +${applied.extension_days} days free`}
+                      </span>
+                      <button onClick={removePromo} className="text-muted-foreground hover:text-foreground">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Promo code"
+                        value={promoInput}
+                        onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                        className="h-9 font-mono"
+                        maxLength={40}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={applyPromo}
+                        disabled={applyingPromo || !promoInput.trim()}
+                      >
+                        {applyingPromo ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <ul className="space-y-3 mb-6">
                 {PRO_FEATURES.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-sm">
@@ -233,18 +282,24 @@ const Pricing = () => {
                 </Button>
               ) : geoLoading || authLoading || subscriptionLoading ? (
                 <Button className="w-full" disabled><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading…</Button>
-              ) : canPay ? (
+              ) : canPay || (applied && applied.is_free) ? (
                 <Button
                   onClick={handleUpgrade}
                   disabled={checkoutLoading}
                   className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:opacity-90"
                 >
-                  {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Opening checkout…</> : "Upgrade to Pro"}
+                  {loading ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing…</>
+                  ) : applied?.is_free ? (
+                    "Redeem & activate Pro"
+                  ) : (
+                    "Upgrade to Pro"
+                  )}
                 </Button>
               ) : (
                 <Button className="w-full" disabled variant="outline">International payments coming soon</Button>
               )}
-              {!canPay && !geoLoading && (
+              {!canPay && !geoLoading && !(applied && applied.is_free) && (
                 <p className="text-xs text-muted-foreground mt-2 text-center">We currently accept payments from India only. Global support is on the way.</p>
               )}
             </div>
