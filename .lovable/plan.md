@@ -1,67 +1,101 @@
-# Plan v2: Resilience Without Quality Loss (Critiques Addressed)
 
-## Decision (unchanged)
-- **No model downgrades.** Keep current Gemini models.
-- **No Groq.** Same reasons.
+# Promo Code System
 
-## Corrections From v1
+Users type a code on `/pricing`, we validate it server-side, then either (a) skip Razorpay and grant Pro directly (100% off / free extension), or (b) create a Razorpay order with the discounted amount. Admins manage codes at `/admin/promo-codes`.
 
-| v1 said | Reality | v2 does |
-|---|---|---|
-| 60s cooldown by user_id | Would serve stale data after a resume/profile edit | Cooldown keyed on **input hash**, not user_id alone |
-| "~500-1000 concurrent users" | Made-up number, unverified | Removed. Capacity is unknown until measured. |
-| One retry after 3s | Fails under sustained rate-limit | Retry once → then queue expensive jobs OR show honest "busy" message for interactive ones |
-| Credit alert | Requires you to be awake | **Auto top-up** (Pro/Business only) — confirmed available in Lovable docs |
-| — | Multi-account abuse not covered | Add signup CAPTCHA + email verification gate before AI unlocks |
-| — | Supabase concurrency limit unknown | Add per-user dedup + monitor logs; escalate to bigger Cloud instance if hit |
+## 1. Database (migration)
 
-## What Will Change
+**Table `promo_codes`**
+- `id uuid pk`
+- `code text unique not null` (stored uppercase, e.g. `LAUNCH20`)
+- `discount_type text not null` — `percent` | `flat` | `free_extension` | `free_upgrade`
+- `discount_value int not null` — percent (1–100), paise for flat, or days for free_extension. Ignored for free_upgrade.
+- `applies_to text not null default 'any'` — `monthly` | `yearly` | `any`
+- `max_redemptions int null` — null = unlimited
+- `redemption_count int not null default 0`
+- `expires_at timestamptz null`
+- `active boolean not null default true`
+- `created_by uuid`, `created_at`, `updated_at`
 
-### 1. Input-hash cooldown (not user_id cooldown)
-- Add an `input_hash TEXT` column to `career_recommendations`, `skill_analysis`, `market_data`, `career_reports`, `resume_analysis`, `linkedin_analysis`.
-- Before calling the AI, compute `SHA-256(JSON.stringify(sortedInputs))` server-side.
-- If a row exists with the same `input_hash` for this user AND is < 5 minutes old → return it, skip the AI call.
-- If input hash differs (user edited profile, uploaded new resume) → always regenerate. No staleness.
-- Result: blocks double-click spam and refresh loops, never blocks a legitimate re-run.
+**Table `promo_redemptions`**
+- `id uuid pk`
+- `promo_code_id uuid → promo_codes(id)`
+- `user_id uuid not null`
+- `order_id text null` (Razorpay order id, null for free upgrades)
+- `discount_applied_paise int not null default 0`
+- `redeemed_at timestamptz default now()`
+- **Unique index `(promo_code_id, user_id)`** → enforces one-per-user
 
-### 2. Two-tier failure handling
-- **Interactive features** (`interview-chat`, `evaluate-interview`, `parse-resume`): retry once at 3s → if still 429/5xx, show "AI service is busy, please try again in a minute." No queuing — user is actively waiting.
-- **Expensive async features** (`generate-career-report`, `generate-market-insights`): on second failure, insert into a new `pending_generations` table with status=queued. A follow-up run (cron or on next login) picks them up. UI shows "We'll notify you when ready."
-- Shared handler in `src/services/featureGate.ts` — extend existing `handleFeatureError`.
+Grants + RLS:
+- `promo_codes`: `authenticated` SELECT only (needed by validate function via anon-key client). No direct write from client — admins write via edge function using service role. `service_role` ALL.
+- `promo_redemptions`: no client access. `service_role` ALL only. RLS enabled with no permissive policies.
 
-### 3. Auto top-up (Pro/Business) or alert (Free)
-- I can't set this from code — it's a workspace setting in **Settings → Plans & credit usage**.
-- Recommended config: threshold at 30% of monthly grant, top-up amount = 1 month of expected spend, monthly spend cap = 3× monthly grant (hard ceiling so a runaway bug can't empty your card).
-- On Free plan: fall back to a balance-notification limit (I can set this via credit tools).
+## 2. Edge functions
 
-### 4. Signup abuse prevention
-- Add **Cloudflare Turnstile** (free, no vendor lock-in) to the signup form. Verifies human before Supabase `signUp` is called.
-- Add **email verification gate**: `profiles.email_verified` boolean; edge functions reject AI calls if false. Supabase already sends verification emails — just enforce it server-side.
-- Optional (later): IP-based signup rate limit in a `pre-signup` edge function — max 3 signups per IP per hour.
+### `validate-promo-code` (new)
+Input: `{ code, interval }`. Auth required.
+- Look up active code, check expiry, `applies_to`, `redemption_count < max_redemptions`, and no existing redemption for this user.
+- Compute base price (₹499 / ₹3999 in paise).
+- Return `{ valid, discount_type, discount_value, final_amount_paise, message }`.
+- Does NOT record redemption — just previews.
 
-### 5. Concurrency dedup + observability
-- Add a lightweight `active_generations` table: `(user_id, feature, started_at)` with a 2-min TTL.
-- Edge function checks before starting: if a row exists for this user+feature and started < 2 min ago, return 429 immediately with "Already generating, please wait." Prevents a single user from spawning parallel identical jobs.
-- Monitor via edge function logs; if we see repeated 5xx from Supabase (not Gemini), the fix is a bigger Cloud instance, not code.
+### `create-razorpay-order` (modify)
+Accept optional `code` in body.
+- Re-validate server-side (never trust client-computed price).
+- If `free_upgrade` or `percent=100` or `flat >= price`:
+  - Skip Razorpay. Upsert subscription to Pro with `current_period_end = now + (30/365 days)`. Insert `promo_redemptions` row. Increment `redemption_count`. Return `{ free: true }`.
+- If `free_extension`:
+  - Skip Razorpay. Extend `current_period_end` by `discount_value` days (from later of now / existing end). Insert redemption. Return `{ free: true }`.
+- Else create order with discounted amount, stash `code` in order `notes` so verify step can finalize redemption.
 
-## Order Of Work (if you approve)
+### `verify-razorpay-payment` (modify)
+- After signature verification succeeds, if order notes contain `promo_code`: insert `promo_redemptions` row and increment `redemption_count` atomically (use a `SECURITY DEFINER` function `redeem_promo(code_id, user_id, order_id, discount_paise)` that does both in one transaction and re-checks max_redemptions to prevent race).
 
-1. Input-hash cooldown (biggest correctness fix — removes the v1 bug).
-2. Concurrency dedup (`active_generations`).
-3. Signup CAPTCHA + email verification gate.
-4. Two-tier failure handling with `pending_generations` queue.
-5. You configure auto top-up in Settings (5 min, one-time).
+### `admin-promo-codes` (new, admin-only)
+- Uses existing `private.is_admin()` gate.
+- Actions: `list`, `create`, `update` (toggle active / edit), `delete`.
 
-## Explicitly NOT Doing
+## 3. Frontend
 
-- Model changes.
-- Prompt changes.
-- Groq / second AI provider.
-- Guessing capacity numbers.
-- Anything requiring me to know Supabase's private per-plan concurrency limit.
+### `/pricing` (`src/pages/Pricing.tsx`)
+- Add input + "Apply" button under the Pro card.
+- On apply → call `validate-promo-code` → show discounted price with strikethrough original, plus a green "Code applied" chip and Remove button.
+- Pass `code` to `billingService.createSubscription(interval, code)`.
+- If response is `{ free: true }` → toast success, refresh subscription, navigate to `/payment-success`. Otherwise open Razorpay as today.
 
-## What I Cannot Guarantee
+### `billingService.ts`
+- `createSubscription(interval, code?)` — forward code.
+- New `validatePromo(code, interval)` helper.
 
-- Exact concurrent-user capacity — depends on your Gemini tier and Supabase plan, both of which Lovable does not publish per-project.
-- Zero 429s under a viral spike — the queue+message pattern makes them survivable, not impossible.
-- That auto top-up is available on your specific plan — verify in Settings before relying on it.
+### `/admin/promo-codes` (new page)
+- Same shell as `/admin/reviews`. Table of codes with columns: code, type, value, applies to, redemptions (`x/max`), expires, active toggle, actions.
+- "New code" dialog with fields matching the schema (type dropdown, value input, plan dropdown, expiry datepicker, max redemptions).
+- Wire into admin sidebar / `AdminInbox` nav.
+
+## 4. Race + abuse safeguards
+
+- Redemption count and `promo_redemptions` insert happen in one `SECURITY DEFINER` SQL function so two simultaneous payments can't both consume the last slot.
+- Unique `(promo_code_id, user_id)` index enforces one-per-user at the DB level even if the check races.
+- Codes normalized to uppercase on write and on lookup.
+- Discount recomputed server-side inside `create-razorpay-order`; the client's `final_amount` is never trusted.
+
+## 5. Files touched
+
+New:
+- `supabase/functions/validate-promo-code/index.ts`
+- `supabase/functions/admin-promo-codes/index.ts`
+- `src/pages/AdminPromoCodes.tsx`
+- Migration for tables + `redeem_promo` function
+
+Modified:
+- `supabase/functions/create-razorpay-order/index.ts`
+- `supabase/functions/verify-razorpay-payment/index.ts`
+- `src/pages/Pricing.tsx`
+- `src/services/billingService.ts`
+- `src/routes/AppRoutes.tsx` (add `/admin/promo-codes`)
+
+## 6. Out of scope (say if you want them)
+
+- Stacking multiple codes
+- Referral / auto-generated per-user codes
+- Analytics dashboard for code performance
