@@ -559,6 +559,86 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_codes: {
+        Row: {
+          active: boolean
+          applies_to: string
+          code: string
+          created_at: string
+          created_by: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          max_redemptions: number | null
+          redemption_count: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          applies_to?: string
+          code: string
+          created_at?: string
+          created_by?: string | null
+          discount_type: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          max_redemptions?: number | null
+          redemption_count?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          applies_to?: string
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          max_redemptions?: number | null
+          redemption_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      promo_redemptions: {
+        Row: {
+          discount_applied_paise: number
+          id: string
+          order_id: string | null
+          promo_code_id: string
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          discount_applied_paise?: number
+          id?: string
+          order_id?: string | null
+          promo_code_id: string
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          discount_applied_paise?: number
+          id?: string
+          order_id?: string | null
+          promo_code_id?: string
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_redemptions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       repo_analysis: {
         Row: {
           analysis_id: string
@@ -898,7 +978,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      redeem_promo: {
+        Args: {
+          _code_id: string
+          _discount_paise: number
+          _order_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
