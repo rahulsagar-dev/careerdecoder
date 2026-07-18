@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import { SEO } from "@/components/SEO";
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const Signup = () => {
+  const [submitted, setSubmitted] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,7 +21,6 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,14 +32,48 @@ const Signup = () => {
     setIsLoading(true);
     try {
       await signUp(email, password, fullName);
-      toast.success("Account created! Check your email to verify.");
-      navigate("/profile/setup");
+      setSubmitted(true);
     } catch (error: any) {
       toast.error(error.message || "Failed to create account");
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (submitted) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-8">
+        <SEO title="Verify your Email — Career Decode" description="Check your inbox to verify your Career Decode account." path="/signup" />
+        <Card className="w-full max-w-md shadow-lg rounded-xl border-0">
+          <CardHeader className="text-center space-y-2">
+            <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent mx-auto">
+              Career Decode
+            </Link>
+            <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl">📧</div>
+            <h1 className="text-xl font-semibold">Check your email</h1>
+            <CardDescription>
+              We sent a verification link to <span className="font-medium text-foreground">{email}</span>.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-muted-foreground text-center">
+            <p>Please open the email and click the verification link to activate your account.</p>
+            <p>Once verified, come back here and log in to get started.</p>
+          </CardContent>
+          <CardFooter className="flex-col gap-2">
+            <Link to="/login" className="w-full">
+              <Button className="w-full bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] hover:opacity-90 transition-opacity">
+                Go to Login
+              </Button>
+            </Link>
+            <p className="text-xs text-muted-foreground text-center">
+              Didn't get the email? Check your spam folder.
+            </p>
+          </CardFooter>
+        </Card>
+      </main>
+    );
+  }
+
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-8">
