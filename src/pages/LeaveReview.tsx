@@ -65,7 +65,7 @@ const LeaveReview = () => {
         rating,
         quote: quote.trim().slice(0, MAX),
       });
-      toast.success("Thanks! Your review will appear once approved.");
+      toast.success("Thanks! Your review is now live.");
       const mine = await reviewService.getMine(user.id);
       setExisting(mine);
       setEditing(false);
