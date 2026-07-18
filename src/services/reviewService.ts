@@ -58,8 +58,8 @@ export const reviewService = {
     const row = {
       ...payload,
       avatar_initials: initialsFromName(payload.name),
-      status: "pending" as const,
-      approved_at: null,
+      status: "approved" as const,
+      approved_at: new Date().toISOString(),
     };
     const { data, error } = await supabase
       .from("reviews")
