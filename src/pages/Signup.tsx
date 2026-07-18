@@ -13,6 +13,7 @@ import { SEO } from "@/components/SEO";
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const Signup = () => {
+  const [submitted, setSubmitted] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
