@@ -8,6 +8,9 @@ const Footer = () => {
       <div className="container flex flex-col md:flex-row items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Career Decode. All rights reserved.</p>
         <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+          <Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</Link>
+          <Link to="/careers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Career Guides</Link>
+          <Link to="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link>
           <Link to="/support" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Support</Link>
           <Link to="/privacy-policy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link>
           <Link to="/terms-of-service" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link>
