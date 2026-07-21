@@ -68,6 +68,7 @@ const Navbar = () => {
         <div className="md:hidden border-t border-border bg-background px-4 pb-4 space-y-3">
           <Link to="/" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-medium text-muted-foreground">Home</Link>
           <button onClick={scrollToFeatures} className="block py-2 text-sm font-medium text-muted-foreground w-full text-left">Features</button>
+          <Link to="/pricing" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-medium text-muted-foreground">Pricing</Link>
           {loading ? (
             <Button variant="ghost" className="w-full justify-start" disabled><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading</Button>
           ) : user ? (
