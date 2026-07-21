@@ -37,6 +37,12 @@ const Navbar = () => {
           <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Pricing
           </Link>
+          <Link to="/careers" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Careers
+          </Link>
+          <Link to="/blog" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Blog
+          </Link>
           {loading ? (
             <Button variant="ghost" size="sm" disabled>
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -69,6 +75,8 @@ const Navbar = () => {
           <Link to="/" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-medium text-muted-foreground">Home</Link>
           <button onClick={scrollToFeatures} className="block py-2 text-sm font-medium text-muted-foreground w-full text-left">Features</button>
           <Link to="/pricing" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-medium text-muted-foreground">Pricing</Link>
+          <Link to="/careers" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-medium text-muted-foreground">Careers</Link>
+          <Link to="/blog" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-medium text-muted-foreground">Blog</Link>
           {loading ? (
             <Button variant="ghost" className="w-full justify-start" disabled><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading</Button>
           ) : user ? (
