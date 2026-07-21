@@ -37,6 +37,12 @@ const Navbar = () => {
           <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Pricing
           </Link>
+          <Link to="/careers" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Careers
+          </Link>
+          <Link to="/blog" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Blog
+          </Link>
           {loading ? (
             <Button variant="ghost" size="sm" disabled>
               <Loader2 className="h-4 w-4 animate-spin" />
