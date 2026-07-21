@@ -32,26 +32,31 @@ const Landing = () => (
     <main>
 
     {/* Hero */}
-    <section className="relative overflow-hidden py-20 md:py-32">
+    <section className="relative overflow-hidden py-20 md:py-28">
       <div className="container flex flex-col md:flex-row items-center gap-12">
         <div className="flex-1 space-y-6 text-center md:text-left">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            Free forever plan · No credit card required
+          </div>
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
-            Decode Your Career{" "}
+            Land your next role{" "}
             <span className="bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent">
-              with AI
+              with AI on your side
             </span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-lg mx-auto md:mx-0">
-            Personalized career paths, skill analysis, and job-ready insights — all powered by artificial intelligence.
+            Resume analysis, skill-gap reports, personalized learning roadmaps, and AI mock interviews — everything you need to go from applying to hired.
           </p>
-          <div className="flex gap-4 justify-center md:justify-start">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
             <Button size="lg" className="bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] hover:opacity-90 transition-opacity text-base px-8" asChild>
-              <Link to="/signup">Get Started</Link>
+              <Link to="/signup">Get Started Free</Link>
             </Button>
             <Button size="lg" variant="outline" className="text-base px-8" onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}>
-              Explore Features
+              See how it works
             </Button>
           </div>
+          <p className="text-xs text-muted-foreground">Free forever plan · Setup in 30 seconds · No credit card</p>
         </div>
 
         {/* Decorative graphic */}
@@ -67,12 +72,31 @@ const Landing = () => (
       </div>
     </section>
 
+    {/* Social proof stats strip */}
+    <section className="border-y border-border/60 bg-muted/30 py-8">
+      <div className="container grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+        {[
+          { stat: "5", label: "AI-powered tools" },
+          { stat: "6-step", label: "Learning roadmaps" },
+          { stat: "ATS-ready", label: "Resume scoring" },
+          { stat: "100%", label: "Free to start" },
+        ].map((s) => (
+          <div key={s.label} className="space-y-1">
+            <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent">{s.stat}</div>
+            <div className="text-xs md:text-sm text-muted-foreground">{s.label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <ReviewsMarquee />
+
     {/* Features */}
     <section id="features" className="py-20 bg-muted/50">
       <div className="container space-y-12">
         <div className="text-center space-y-3">
-          <h2 className="text-3xl md:text-4xl font-bold">Powerful Features</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">Everything you need to navigate your career journey with confidence.</p>
+          <h2 className="text-3xl md:text-4xl font-bold">Everything you need to get hired</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">Five AI-powered tools that replace a career coach, resume writer, and interview prep bundle — for free.</p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f) => (
@@ -112,18 +136,17 @@ const Landing = () => (
       </div>
     </section>
 
-    <ReviewsMarquee />
-
     {/* CTA */}
     <section className="py-20 bg-gradient-to-r from-primary to-[hsl(260,84%,60%)]">
       <div className="container text-center space-y-6">
-        <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground">Start Building Your Future Today</h2>
-        <p className="text-primary-foreground/80 max-w-xl mx-auto">Join thousands of professionals who are already decoding their career paths with AI.</p>
+        <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground">Start building your future today</h2>
+        <p className="text-primary-foreground/80 max-w-xl mx-auto">Join professionals decoding their career paths with AI. Free forever plan, no card required.</p>
         <Button size="lg" variant="secondary" className="text-base px-8 font-semibold" asChild>
           <Link to="/signup">Create Free Account</Link>
         </Button>
       </div>
     </section>
+
 
     </main>
     <Footer />
