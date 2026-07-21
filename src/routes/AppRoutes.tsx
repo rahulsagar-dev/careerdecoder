@@ -29,6 +29,10 @@ import LeaveReview from "@/pages/LeaveReview";
 import AdminReviews from "@/pages/AdminReviews";
 import AdminInbox from "@/pages/AdminInbox";
 import AdminPromoCodes from "@/pages/AdminPromoCodes";
+import Blog from "@/pages/Blog";
+import BlogPost from "@/pages/BlogPost";
+import Careers from "@/pages/Careers";
+import CareerGuide from "@/pages/CareerGuide";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 
@@ -44,6 +48,10 @@ const AppRoutes = () => (
     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
     <Route path="/terms-of-service" element={<TermsOfService />} />
     <Route path="/pricing" element={<Pricing />} />
+    <Route path="/blog" element={<Blog />} />
+    <Route path="/blog/:slug" element={<BlogPost />} />
+    <Route path="/careers" element={<Careers />} />
+    <Route path="/careers/:slug" element={<CareerGuide />} />
     <Route path="/payment-success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
     <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
     <Route path="/profile/setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
