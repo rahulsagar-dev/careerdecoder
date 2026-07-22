@@ -228,7 +228,7 @@ serve(async (req) => {
       const bump = await enforceUsage(userId, "career-recommendations", { increment: true });
       if (!bump.ok) return new Response(JSON.stringify(bump.body), { status: bump.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-      const systemPrompt = `You are a career counselor AI. Analyze the user's profile and suggest 5-7 relevant career paths.
+      const systemPrompt = `You are a career counselor AI for the Indian job market. Analyze the user's profile and suggest 5-7 relevant career paths.
 
 For each career, return structured skill data. Do NOT compute match_score — it will be calculated server-side.
 
@@ -237,6 +237,12 @@ Each required_skill must include:
 - category: "core", "secondary", or "optional"
 - difficulty: "beginner", "intermediate", or "advanced"
 - is_critical: true if this skill is absolutely essential for the role
+
+SALARY REQUIREMENTS (CRITICAL):
+- All salaries MUST be in Indian Rupees (INR) using the ₹ symbol and "LPA" (Lakhs Per Annum) format.
+- Use realistic 2026 Indian market ranges reflecting entry-to-senior spread for that role.
+- Format: "₹<min>–₹<max> LPA" (e.g., "₹6–₹18 LPA", "₹12–₹35 LPA").
+- Do NOT use $, USD, or any non-INR currency.
 
 Be specific and realistic. Return your response by calling the provided function.`;
 
