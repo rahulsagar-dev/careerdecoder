@@ -33,6 +33,7 @@ import Blog from "@/pages/Blog";
 import BlogPost from "@/pages/BlogPost";
 import Careers from "@/pages/Careers";
 import CareerGuide from "@/pages/CareerGuide";
+import Referrals from "@/pages/Referrals";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 
