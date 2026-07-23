@@ -1,18 +1,25 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, Gift } from "lucide-react";
 import { SEO } from "@/components/SEO";
 
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const Signup = () => {
+  const [searchParams] = useSearchParams();
+  const refFromUrl = searchParams.get("ref");
+  useEffect(() => {
+    if (refFromUrl) {
+      try { localStorage.setItem("pending_ref", refFromUrl.trim().toUpperCase()); } catch { /* ignore */ }
+    }
+  }, [refFromUrl]);
   const [submitted, setSubmitted] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
