@@ -23,6 +23,7 @@ import {
   CreditCard,
   Linkedin,
   Star,
+  Gift,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
