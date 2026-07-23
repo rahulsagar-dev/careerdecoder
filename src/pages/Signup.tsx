@@ -94,6 +94,15 @@ const Signup = () => {
           <CardDescription>Start your AI-powered career journey</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {refFromUrl && (
+            <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
+              <Gift className="text-primary shrink-0 mt-0.5" size={18} />
+              <div>
+                <div className="font-medium text-foreground">You're invited!</div>
+                <div className="text-muted-foreground text-xs">Sign up with referral code <span className="font-mono font-semibold text-primary">{refFromUrl.toUpperCase()}</span> and get <span className="font-medium text-foreground">30 days of Pro free</span>.</div>
+              </div>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
