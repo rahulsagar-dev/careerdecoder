@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           try {
             const pending = typeof window !== "undefined" ? localStorage.getItem("pending_ref") : null;
             if (pending) {
-              supabase.rpc("apply_referral", { _code: pending }).then(({ data, error }) => {
+              supabase.functions.invoke("apply-referral", { body: { code: pending } }).then(({ data, error }) => {
                 if (!error) {
                   const res = data as { ok?: boolean; error?: string } | null;
                   if (res?.ok) {
