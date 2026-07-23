@@ -639,6 +639,33 @@ export type Database = {
           },
         ]
       }
+      referrals: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          referred_user_id: string
+          referrer_user_id: string
+          reward_days: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          referred_user_id: string
+          referrer_user_id: string
+          reward_days?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          referred_user_id?: string
+          referrer_user_id?: string
+          reward_days?: number
+        }
+        Relationships: []
+      }
       repo_analysis: {
         Row: {
           analysis_id: string
@@ -973,11 +1000,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      apply_referral: { Args: { _code: string }; Returns: Json }
+      get_or_create_referral_code: { Args: never; Returns: string }
+      grant_pro_days: {
+        Args: { _days: number; _user: string }
+        Returns: undefined
+      }
       redeem_promo: {
         Args: {
           _code_id: string
