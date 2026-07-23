@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
-    const { data, error } = await admin.schema("private").rpc("get_or_create_referral_code", {
+    const { data, error } = await admin.rpc("svc_get_or_create_referral_code", {
       _uid: userData.user.id,
     });
     if (error) throw error;

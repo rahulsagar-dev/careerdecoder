@@ -1032,6 +1032,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      svc_apply_referral: {
+        Args: { _code: string; _uid: string }
+        Returns: Json
+      }
+      svc_get_or_create_referral_code: {
+        Args: { _uid: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
