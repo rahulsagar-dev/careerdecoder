@@ -1023,12 +1023,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      apply_referral: { Args: { _code: string }; Returns: Json }
-      get_or_create_referral_code: { Args: never; Returns: string }
-      grant_pro_days: {
-        Args: { _days: number; _user: string }
-        Returns: undefined
-      }
       redeem_promo: {
         Args: {
           _code_id: string
