@@ -21,9 +21,9 @@ const Referrals = () => {
     if (!user) return;
     (async () => {
       setLoading(true);
-      const { data: codeData, error: codeErr } = await supabase.rpc("get_or_create_referral_code");
+      const { data: codeData, error: codeErr } = await supabase.functions.invoke("get-referral-code");
       if (codeErr) toast.error("Could not load referral code");
-      else setCode((codeData as string) || "");
+      else setCode(((codeData as { code?: string })?.code) || "");
 
       const { count: c } = await supabase
         .from("referrals")
