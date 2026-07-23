@@ -33,6 +33,7 @@ import Blog from "@/pages/Blog";
 import BlogPost from "@/pages/BlogPost";
 import Careers from "@/pages/Careers";
 import CareerGuide from "@/pages/CareerGuide";
+import Referrals from "@/pages/Referrals";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 
@@ -74,6 +75,7 @@ const AppRoutes = () => (
     <Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
     <Route path="/admin/inbox" element={<ProtectedRoute><AdminInbox /></ProtectedRoute>} />
     <Route path="/admin/promo-codes" element={<ProtectedRoute><AdminPromoCodes /></ProtectedRoute>} />
+    <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );

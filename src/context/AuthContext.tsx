@@ -43,6 +43,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           applySession(null);
         } else if (newSession) {
           applySession(newSession);
+          // Auto-claim any pending referral code captured on /signup?ref=...
+          try {
+            const pending = typeof window !== "undefined" ? localStorage.getItem("pending_ref") : null;
+            if (pending) {
+              supabase.rpc("apply_referral", { _code: pending }).then(({ data, error }) => {
+                if (!error) {
+                  const res = data as { ok?: boolean; error?: string } | null;
+                  if (res?.ok) {
+                    localStorage.removeItem("pending_ref");
+                    import("sonner").then(({ toast }) =>
+                      toast.success("Referral applied — 30 days of Pro added!")
+                    );
+                  } else if (res?.error === "already_redeemed" || res?.error === "self_referral" || res?.error === "invalid_code") {
+                    localStorage.removeItem("pending_ref");
+                  }
+                }
+              });
+            }
+          } catch { /* ignore */ }
         } else if (mounted && event !== "INITIAL_SESSION") {
           setLoading(false);
         }

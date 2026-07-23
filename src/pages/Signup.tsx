@@ -1,18 +1,25 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, Gift } from "lucide-react";
 import { SEO } from "@/components/SEO";
 
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const Signup = () => {
+  const [searchParams] = useSearchParams();
+  const refFromUrl = searchParams.get("ref");
+  useEffect(() => {
+    if (refFromUrl) {
+      try { localStorage.setItem("pending_ref", refFromUrl.trim().toUpperCase()); } catch { /* ignore */ }
+    }
+  }, [refFromUrl]);
   const [submitted, setSubmitted] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -87,6 +94,15 @@ const Signup = () => {
           <CardDescription>Start your AI-powered career journey</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {refFromUrl && (
+            <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
+              <Gift className="text-primary shrink-0 mt-0.5" size={18} />
+              <div>
+                <div className="font-medium text-foreground">You're invited!</div>
+                <div className="text-muted-foreground text-xs">Sign up with referral code <span className="font-mono font-semibold text-primary">{refFromUrl.toUpperCase()}</span> and get <span className="font-medium text-foreground">30 days of Pro free</span>.</div>
+              </div>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
