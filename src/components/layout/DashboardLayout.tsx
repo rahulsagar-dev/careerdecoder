@@ -62,6 +62,7 @@ const NAV_ITEMS = [
   { title: "Analytics", url: "/analytics", icon: LineChart },
   { title: "Billing", url: "/billing", icon: CreditCard },
   { title: "Support", url: "/support", icon: LifeBuoy },
+  { title: "Refer & Earn", url: "/referrals", icon: Gift },
   { title: "Leave a Review", url: "/leave-review", icon: Star },
 ];
 
