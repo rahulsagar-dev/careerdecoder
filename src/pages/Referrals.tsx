@@ -21,16 +21,24 @@ const Referrals = () => {
     if (!user) return;
     (async () => {
       setLoading(true);
-      const { data: codeData, error: codeErr } = await supabase.functions.invoke("get-referral-code");
-      if (codeErr) toast.error("Could not load referral code");
-      else setCode(((codeData as { code?: string })?.code) || "");
+      try {
+        const { data: codeData, error: codeErr } = await supabase.functions.invoke("get-referral-code");
+        if (codeErr) {
+          toast.error("Could not load referral code");
+        } else {
+          setCode(((codeData as { code?: string })?.code) || "");
+        }
 
-      const { count: c } = await supabase
-        .from("referrals")
-        .select("*", { count: "exact", head: true })
-        .eq("referrer_user_id", user.id);
-      setCount(c ?? 0);
-      setLoading(false);
+        const { count: c } = await supabase
+          .from("referrals")
+          .select("*", { count: "exact", head: true })
+          .eq("referrer_user_id", user.id);
+        setCount(c ?? 0);
+      } catch {
+        toast.error("Could not load referral details");
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [user]);
 
