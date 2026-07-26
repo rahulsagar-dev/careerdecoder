@@ -5,98 +5,82 @@ import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ReviewsMarquee from "@/components/ReviewsMarquee";
+import HeroPreview from "@/components/landing/HeroPreview";
+import PopularCareers from "@/components/landing/PopularCareers";
+import BlogTeaser from "@/components/landing/BlogTeaser";
 import { SEO } from "@/components/SEO";
 
 const features = [
-  { icon: Brain, title: "AI Career Recommendations", desc: "Get personalized career paths powered by advanced AI algorithms tailored to your skills and aspirations." },
-  { icon: BarChart3, title: "Skill Gap Analysis", desc: "Identify the skills you need to develop and close the gap between where you are and where you want to be." },
-  { icon: Map, title: "Learning Roadmaps", desc: "Follow curated learning paths with courses, projects, and milestones to reach your career goals." },
-  { icon: FileText, title: "Resume Intelligence", desc: "AI-powered resume analysis and suggestions to make your application stand out to recruiters." },
-  { icon: Mic, title: "Interview Preparation", desc: "Practice with AI-driven mock interviews and get real-time feedback to boost your confidence." },
+  { icon: FileText, title: "Resume Intelligence", desc: "Upload your resume and get an ATS score, keyword gaps, and line-by-line fixes recruiters actually respond to." },
+  { icon: BarChart3, title: "Skill Gap Analysis", desc: "See exactly which skills you're missing for your target role — and which ones you already have covered." },
+  { icon: Map, title: "Learning Roadmaps", desc: "A step-by-step plan with courses, projects, and milestones, ordered so each step builds on the last." },
+  { icon: Mic, title: "AI Mock Interviews", desc: "Practice role-specific interviews with an adaptive AI and get scored feedback on every answer." },
+  { icon: Brain, title: "Career Recommendations", desc: "Get matched to roles that fit your actual skills, with salary ranges for the Indian market." },
 ];
 
 const steps = [
-  { icon: UserPlus, num: "01", title: "Create Profile", desc: "Set up your profile with your skills, experience, and career goals." },
-  { icon: Lightbulb, num: "02", title: "Get AI Insights", desc: "Receive personalized recommendations and actionable insights." },
-  { icon: Route, num: "03", title: "Follow Roadmap", desc: "Execute your customized learning and career roadmap step by step." },
+  { icon: UserPlus, num: "01", title: "Create Profile", desc: "Add your skills, experience, and target role — takes about 30 seconds." },
+  { icon: Lightbulb, num: "02", title: "Get AI Insights", desc: "Resume score, skill gaps, and career matches generated from your real data." },
+  { icon: Route, num: "03", title: "Follow Roadmap", desc: "Work through your personalized plan and track progress as you go." },
 ];
 
 const Landing = () => (
   <div className="min-h-screen flex flex-col">
     <SEO
-      title="Career Decode — AI-Powered Career Guidance"
-      description="Personalized career paths, skill analysis, learning roadmaps, and interview prep — powered by AI."
+      title="Career Decoder — AI Resume Score, Skill Gaps & Interview Prep"
+      description="Get an ATS resume score, a personalized skill-gap report, a learning roadmap, and AI mock interviews. Free forever plan, built for the Indian job market."
       path="/"
     />
     <Navbar />
     <main>
 
     {/* Hero */}
-    <section className="relative overflow-hidden py-20 md:py-28">
-      <div className="container flex flex-col md:flex-row items-center gap-12">
-        <div className="flex-1 space-y-6 text-center md:text-left">
+    <section className="relative overflow-hidden py-10 md:py-24">
+      <div className="container flex flex-col md:flex-row items-center gap-10 md:gap-12">
+        <div className="flex-1 space-y-5 text-center md:text-left">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             Free forever plan · No credit card required
           </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
-            Land your next role{" "}
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1]">
+            Know exactly why you're{" "}
             <span className="bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent">
-              with AI on your side
+              not getting interviews
             </span>
           </h1>
-          <p className="text-lg text-muted-foreground max-w-lg mx-auto md:mx-0">
-            Resume analysis, skill-gap reports, personalized learning roadmaps, and AI mock interviews — everything you need to go from applying to hired.
+          <p className="text-base md:text-lg text-muted-foreground max-w-lg mx-auto md:mx-0">
+            Upload your resume and get an ATS score, your missing skills, a learning roadmap, and AI mock interviews — in under two minutes.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-            <Button size="lg" className="bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] hover:opacity-90 transition-opacity text-base px-8" asChild>
-              <Link to="/signup">Get Started Free</Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+            <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] hover:opacity-90 transition-opacity text-base px-8" asChild>
+              <Link to="/signup">Analyze my resume — free</Link>
             </Button>
-            <Button size="lg" variant="outline" className="text-base px-8" onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}>
-              See how it works
+            <Button
+              size="lg"
+              variant="ghost"
+              className="w-full sm:w-auto text-base px-8"
+              onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              See what you get
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">Free forever plan · Setup in 30 seconds · No credit card</p>
+          <p className="text-xs text-muted-foreground">
+            Built for the Indian job market · ₹ pricing · UPI &amp; cards accepted
+          </p>
         </div>
 
-        {/* Decorative graphic */}
-        <div className="flex-1 flex justify-center">
-          <div className="relative w-72 h-72 md:w-96 md:h-96">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/30 to-[hsl(260,84%,60%)]/30 blur-3xl" />
-            <div className="absolute inset-8 rounded-full bg-gradient-to-tr from-primary/50 to-[hsl(260,84%,60%)]/50 blur-2xl animate-pulse" />
-            <div className="absolute inset-16 rounded-full bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] opacity-80 flex items-center justify-center">
-              <Brain className="text-primary-foreground" size={64} />
-            </div>
-          </div>
+        <div className="flex-1 flex justify-center w-full">
+          <HeroPreview />
         </div>
       </div>
     </section>
 
-    {/* Social proof stats strip */}
-    <section className="border-y border-border/60 bg-muted/30 py-8">
-      <div className="container grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-        {[
-          { stat: "5", label: "AI-powered tools" },
-          { stat: "6-step", label: "Learning roadmaps" },
-          { stat: "ATS-ready", label: "Resume scoring" },
-          { stat: "100%", label: "Free to start" },
-        ].map((s) => (
-          <div key={s.label} className="space-y-1">
-            <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent">{s.stat}</div>
-            <div className="text-xs md:text-sm text-muted-foreground">{s.label}</div>
-          </div>
-        ))}
-      </div>
-    </section>
-
-    <ReviewsMarquee />
-
-    {/* Features */}
-    <section id="features" className="py-20 bg-muted/50">
-      <div className="container space-y-12">
+    {/* Features — placed directly after hero so scanners see what the product does */}
+    <section id="features" className="py-16 md:py-20 bg-muted/50">
+      <div className="container space-y-10">
         <div className="text-center space-y-3">
-          <h2 className="text-3xl md:text-4xl font-bold">Everything you need to get hired</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">Five AI-powered tools that replace a career coach, resume writer, and interview prep bundle — for free.</p>
+          <h2 className="text-2xl md:text-4xl font-bold">Everything you need to get hired</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">Five AI tools that replace a career coach, a resume writer, and an interview prep course.</p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f) => (
@@ -115,11 +99,11 @@ const Landing = () => (
     </section>
 
     {/* How It Works */}
-    <section className="py-20">
-      <div className="container space-y-12">
+    <section className="py-16 md:py-20">
+      <div className="container space-y-10">
         <div className="text-center space-y-3">
-          <h2 className="text-3xl md:text-4xl font-bold">How It Works</h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">Three simple steps to unlock your career potential.</p>
+          <h2 className="text-2xl md:text-4xl font-bold">How it works</h2>
+          <p className="text-muted-foreground max-w-xl mx-auto">Three steps from "no callbacks" to a clear plan.</p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
           {steps.map((s) => (
@@ -136,17 +120,40 @@ const Landing = () => (
       </div>
     </section>
 
+    {/* Social proof */}
+    <ReviewsMarquee />
+
+    {/* Stats strip */}
+    <section className="border-y border-border/60 bg-muted/30 py-8">
+      <div className="container grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+        {[
+          { stat: "5", label: "AI-powered tools" },
+          { stat: "6-step", label: "Learning roadmaps" },
+          { stat: "ATS-ready", label: "Resume scoring" },
+          { stat: "100%", label: "Free to start" },
+        ].map((s) => (
+          <div key={s.label} className="space-y-1">
+            <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent">{s.stat}</div>
+            <div className="text-xs md:text-sm text-muted-foreground">{s.label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* Second-click destinations for visitors not ready to sign up */}
+    <PopularCareers />
+    <BlogTeaser />
+
     {/* CTA */}
-    <section className="py-20 bg-gradient-to-r from-primary to-[hsl(260,84%,60%)]">
+    <section className="py-16 md:py-20 bg-gradient-to-r from-primary to-[hsl(260,84%,60%)]">
       <div className="container text-center space-y-6">
-        <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground">Start building your future today</h2>
+        <h2 className="text-2xl md:text-4xl font-bold text-primary-foreground">Start building your future today</h2>
         <p className="text-primary-foreground/80 max-w-xl mx-auto">Join professionals decoding their career paths with AI. Free forever plan, no card required.</p>
         <Button size="lg" variant="secondary" className="text-base px-8 font-semibold" asChild>
           <Link to="/signup">Create Free Account</Link>
         </Button>
       </div>
     </section>
-
 
     </main>
     <Footer />
