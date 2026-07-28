@@ -18,6 +18,8 @@ const features = [
   { icon: Brain, title: "Career Recommendations", desc: "Get matched to roles that fit your actual skills, with salary ranges for the Indian market." },
 ];
 
+const heroLinks = careers.slice(0, 3);
+
 const steps = [
   { icon: UserPlus, num: "01", title: "Create Profile", desc: "Add your skills, experience, and target role — takes about 30 seconds." },
   { icon: Lightbulb, num: "02", title: "Get AI Insights", desc: "Resume score, skill gaps, and career matches generated from your real data." },
