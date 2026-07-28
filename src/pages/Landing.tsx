@@ -9,6 +9,7 @@ import HeroPreview from "@/components/landing/HeroPreview";
 import PopularCareers from "@/components/landing/PopularCareers";
 import BlogTeaser from "@/components/landing/BlogTeaser";
 import { SEO } from "@/components/SEO";
+import { careers } from "@/data/careers";
 
 const features = [
   { icon: FileText, title: "Resume Intelligence", desc: "Upload your resume and get an ATS score, keyword gaps, and line-by-line fixes recruiters actually respond to." },
@@ -17,6 +18,8 @@ const features = [
   { icon: Mic, title: "AI Mock Interviews", desc: "Practice role-specific interviews with an adaptive AI and get scored feedback on every answer." },
   { icon: Brain, title: "Career Recommendations", desc: "Get matched to roles that fit your actual skills, with salary ranges for the Indian market." },
 ];
+
+const heroLinks = careers.slice(0, 3);
 
 const steps = [
   { icon: UserPlus, num: "01", title: "Create Profile", desc: "Add your skills, experience, and target role — takes about 30 seconds." },
@@ -55,15 +58,21 @@ const Landing = () => (
             <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] hover:opacity-90 transition-opacity text-base px-8" asChild>
               <Link to="/signup">Analyze my resume — free</Link>
             </Button>
-            <Button
-              size="lg"
-              variant="ghost"
-              className="w-full sm:w-auto text-base px-8"
-              onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
-            >
-              See what you get
+            <Button size="lg" variant="outline" className="w-full sm:w-auto text-base px-8" asChild>
+              <Link to="/careers">Browse career guides — no signup</Link>
             </Button>
           </div>
+          <p className="text-sm text-muted-foreground">
+            Popular right now:{" "}
+            {heroLinks.map((c, i) => (
+              <span key={c.slug}>
+                {i > 0 && <span className="text-muted-foreground/50"> · </span>}
+                <Link to={`/careers/${c.slug}`} className="text-primary underline-offset-4 hover:underline">
+                  {c.title}
+                </Link>
+              </span>
+            ))}
+          </p>
           <p className="text-xs text-muted-foreground">
             Built for the Indian job market · ₹ pricing · UPI &amp; cards accepted
           </p>
@@ -98,8 +107,11 @@ const Landing = () => (
       </div>
     </section>
 
+    {/* Highest-intent second click — right after features, above the fold on scroll */}
+    <PopularCareers />
+
     {/* How It Works */}
-    <section className="py-16 md:py-20">
+    <section className="py-16 md:py-20 bg-muted/30">
       <div className="container space-y-10">
         <div className="text-center space-y-3">
           <h2 className="text-2xl md:text-4xl font-bold">How it works</h2>
@@ -120,11 +132,8 @@ const Landing = () => (
       </div>
     </section>
 
-    {/* Social proof */}
-    <ReviewsMarquee />
-
-    {/* Stats strip */}
-    <section className="border-y border-border/60 bg-muted/30 py-8">
+    {/* Trust block — stats and social proof together */}
+    <section className="border-y border-border/60 py-8">
       <div className="container grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
         {[
           { stat: "5", label: "AI-powered tools" },
@@ -139,10 +148,10 @@ const Landing = () => (
         ))}
       </div>
     </section>
+    <ReviewsMarquee />
 
-    {/* Second-click destinations for visitors not ready to sign up */}
-    <PopularCareers />
     <BlogTeaser />
+
 
     {/* CTA */}
     <section className="py-16 md:py-20 bg-gradient-to-r from-primary to-[hsl(260,84%,60%)]">
