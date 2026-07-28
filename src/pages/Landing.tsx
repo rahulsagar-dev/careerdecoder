@@ -107,8 +107,11 @@ const Landing = () => (
       </div>
     </section>
 
+    {/* Highest-intent second click — right after features, above the fold on scroll */}
+    <PopularCareers />
+
     {/* How It Works */}
-    <section className="py-16 md:py-20">
+    <section className="py-16 md:py-20 bg-muted/30">
       <div className="container space-y-10">
         <div className="text-center space-y-3">
           <h2 className="text-2xl md:text-4xl font-bold">How it works</h2>
@@ -129,11 +132,8 @@ const Landing = () => (
       </div>
     </section>
 
-    {/* Social proof */}
-    <ReviewsMarquee />
-
-    {/* Stats strip */}
-    <section className="border-y border-border/60 bg-muted/30 py-8">
+    {/* Trust block — stats and social proof together */}
+    <section className="border-y border-border/60 py-8">
       <div className="container grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
         {[
           { stat: "5", label: "AI-powered tools" },
@@ -148,10 +148,10 @@ const Landing = () => (
         ))}
       </div>
     </section>
+    <ReviewsMarquee />
 
-    {/* Second-click destinations for visitors not ready to sign up */}
-    <PopularCareers />
     <BlogTeaser />
+
 
     {/* CTA */}
     <section className="py-16 md:py-20 bg-gradient-to-r from-primary to-[hsl(260,84%,60%)]">
