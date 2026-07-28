@@ -9,6 +9,7 @@ import HeroPreview from "@/components/landing/HeroPreview";
 import PopularCareers from "@/components/landing/PopularCareers";
 import BlogTeaser from "@/components/landing/BlogTeaser";
 import { SEO } from "@/components/SEO";
+import { careers } from "@/data/careers";
 
 const features = [
   { icon: FileText, title: "Resume Intelligence", desc: "Upload your resume and get an ATS score, keyword gaps, and line-by-line fixes recruiters actually respond to." },
