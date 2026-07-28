@@ -55,15 +55,21 @@ const Landing = () => (
             <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] hover:opacity-90 transition-opacity text-base px-8" asChild>
               <Link to="/signup">Analyze my resume — free</Link>
             </Button>
-            <Button
-              size="lg"
-              variant="ghost"
-              className="w-full sm:w-auto text-base px-8"
-              onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
-            >
-              See what you get
+            <Button size="lg" variant="outline" className="w-full sm:w-auto text-base px-8" asChild>
+              <Link to="/careers">Browse career guides — no signup</Link>
             </Button>
           </div>
+          <p className="text-sm text-muted-foreground">
+            Popular right now:{" "}
+            {heroLinks.map((c, i) => (
+              <span key={c.slug}>
+                {i > 0 && <span className="text-muted-foreground/50"> · </span>}
+                <Link to={`/careers/${c.slug}`} className="text-primary underline-offset-4 hover:underline">
+                  {c.title}
+                </Link>
+              </span>
+            ))}
+          </p>
           <p className="text-xs text-muted-foreground">
             Built for the Indian job market · ₹ pricing · UPI &amp; cards accepted
           </p>
