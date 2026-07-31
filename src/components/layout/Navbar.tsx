@@ -37,6 +37,9 @@ const Navbar = () => {
           <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Pricing
           </Link>
+          <Link to="/free/ats-score" className="text-sm font-medium text-primary hover:opacity-80 transition-opacity">
+            Free ATS Score
+          </Link>
           <Link to="/careers" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Careers
           </Link>
@@ -75,6 +78,7 @@ const Navbar = () => {
           <Link to="/" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-medium text-muted-foreground">Home</Link>
           <button onClick={scrollToFeatures} className="block py-2 text-sm font-medium text-muted-foreground w-full text-left">Features</button>
           <Link to="/pricing" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-medium text-muted-foreground">Pricing</Link>
+          <Link to="/free/ats-score" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-medium text-primary">Free ATS Score</Link>
           <Link to="/careers" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-medium text-muted-foreground">Careers</Link>
           <Link to="/blog" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-medium text-muted-foreground">Blog</Link>
           {loading ? (

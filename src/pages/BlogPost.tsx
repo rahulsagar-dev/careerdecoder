@@ -4,6 +4,7 @@ import remarkGfm from "remark-gfm";
 import { Calendar, Clock, ArrowLeft, ArrowRight } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import FreeToolCta from "@/components/free/FreeToolCta";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
 import { postBySlug, posts } from "@/data/blog";
@@ -48,6 +49,10 @@ const BlogPost = () => {
             </div>
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">{post.title}</h1>
             <p className="text-lg text-muted-foreground mb-8">{post.description}</p>
+
+            <FreeToolCta className="mb-8" />
+
+
 
             <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-semibold prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>

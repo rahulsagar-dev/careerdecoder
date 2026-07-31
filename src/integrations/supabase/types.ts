@@ -35,6 +35,36 @@ export type Database = {
         }
         Relationships: []
       }
+      anon_tool_usage: {
+        Row: {
+          count: number
+          created_at: string
+          day: string
+          id: string
+          ip_hash: string
+          tool: string
+          updated_at: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          day?: string
+          id?: string
+          ip_hash: string
+          tool: string
+          updated_at?: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          day?: string
+          id?: string
+          ip_hash?: string
+          tool?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bug_reports: {
         Row: {
           browser_info: string | null

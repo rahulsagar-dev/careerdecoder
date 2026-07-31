@@ -40,6 +40,8 @@ const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const Careers = lazy(() => import("@/pages/Careers"));
 const CareerGuide = lazy(() => import("@/pages/CareerGuide"));
 const Referrals = lazy(() => import("@/pages/Referrals"));
+const FreeAtsScore = lazy(() => import("@/pages/FreeAtsScore"));
+const FreeResumeInsights = lazy(() => import("@/pages/FreeResumeInsights"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const RouteFallback = () => (
@@ -65,6 +67,8 @@ const AppRoutes = () => (
       <Route path="/blog/:slug" element={<BlogPost />} />
       <Route path="/careers" element={<Careers />} />
       <Route path="/careers/:slug" element={<CareerGuide />} />
+      <Route path="/free/ats-score" element={<FreeAtsScore />} />
+      <Route path="/free/resume-insights" element={<FreeResumeInsights />} />
       <Route path="/payment-success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
       <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
       <Route path="/profile/setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
