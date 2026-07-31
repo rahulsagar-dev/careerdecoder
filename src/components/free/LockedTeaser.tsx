@@ -18,7 +18,7 @@ const LockedTeaser = ({ title, items, footnote }: Props) => (
         <h3 className="font-semibold">{title}</h3>
       </div>
 
-      <ul className="space-y-3 select-none" aria-hidden="true">
+      <ul className="space-y-3 select-none pb-28" aria-hidden="true">
         {items.map((item, i) => (
           <li key={i} className="text-sm text-muted-foreground blur-[5px]">{item}</li>
         ))}
