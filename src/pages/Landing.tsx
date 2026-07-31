@@ -56,10 +56,10 @@ const Landing = () => (
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
             <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] hover:opacity-90 transition-opacity text-base px-8" asChild>
-              <Link to="/signup">Analyze my resume — free</Link>
+              <Link to="/free/ats-score">Check your ATS score free — no signup</Link>
             </Button>
             <Button size="lg" variant="outline" className="w-full sm:w-auto text-base px-8" asChild>
-              <Link to="/careers">Browse career guides — no signup</Link>
+              <Link to="/signup">Create free account</Link>
             </Button>
           </div>
           <p className="text-sm text-muted-foreground">

@@ -133,10 +133,11 @@ const CareerGuide = () => {
                   <Link to="/signup">Get my roadmap free</Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
-                  <Link to="/skill-gap">Run skill gap analysis</Link>
+                  <Link to="/free/ats-score">Check my ATS score — no signup</Link>
                 </Button>
               </div>
             </div>
+
 
             {related.length > 0 && (
               <div className="mt-14">
