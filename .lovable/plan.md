@@ -1,46 +1,46 @@
-＃ Why bounce is still 75%+
+# Free No-Signup Tools (Lead Magnets)
 
-I checked the live site and the analytics you're looking at. The landing copy is not the main problem anymore — **load time and a blank first screen are.**
+Goal: let a first-time visitor get real value in under 60 seconds without creating an account, then hit a natural "sign up to unlock the rest" moment. This targets the 82% bounce rate directly — right now every useful thing on the site is behind `/login`.
 
-## What I measured (facts, not guesses)
+## What gets built
 
-1. **One giant JS bundle: 478 KB compressed** (`/assets/index-DgOJWN6g.js`, ~1.6 MB unpacked). Every route is imported eagerly in `src/routes/AppRoutes.tsx` — dashboard, React Flow career graph, Recharts analytics, markdown renderer, admin pages — all download **before the landing page can paint**. On a mid-range Indian 4G phone that's roughly 4–8 seconds of white screen.
-2. **The HTML is empty.** `index.html` ships 2.5 KB with `<div id="root"></div>` and no fallback markup — so until that 478 KB parses, a visitor literally sees nothing. Most bounces happen inside 3 seconds.
-3. **The second-click strips aren't earning clicks.** Top pages are `/` (251), `/signup` (53), `/login` (49), `/support` (23) — `/careers` and `/blog` don't appear in the top 10 at all, even though both strips are on the landing page. They sit too far down (after Reviews + Stats) for mobile visitors.
-4. **A chunk of your "bounce" is bots.** 84 Unknown + 14 CN + 4 MD + 2 RU countries, plus a `temp-mail.org` referrer. Days with 3–7 visitors show 100% bounce — those are scrapers, and they drag the average up regardless of what we build.
-5. **Head metadata mismatch.** `index.html` still says "Career Decode — AI-Powered Career Guidance" while the React Helmet title says "Career Decoder — AI Resume Score…". The `og:image` points at an old Lovable preview screenshot URL, so link shares look off-brand.
+Two public tools, both reachable from the hero and the nav:
 
-## The fix, in priority order
+### 1. Free ATS Resume Score — `/free/ats-score`
+- Drag-and-drop a PDF/DOCX resume, no account, no email required.
+- Runs the same parsing + ATS scoring engine the paid product uses.
+- **Shown free:** overall ATS score (0–100) with a visual gauge, 3 sub-scores (formatting/parseability, keyword coverage, impact & metrics), the top 3 detected skills, and 2 concrete fixes.
+- **Locked behind signup:** the full fix list, missing-keyword list, section-by-section rewrite suggestions, and saving the result. Rendered as a blurred/teaser card with a "Create free account to unlock" button.
 
-### 1. Route-level code splitting (biggest win)
-Convert every route in `AppRoutes.tsx` to `React.lazy` + a `<Suspense>` fallback, keeping only `Landing` eager. Expected result: landing bundle drops from ~478 KB to well under 150 KB compressed. Heavy libraries (`@xyflow/react`, `recharts`, `react-markdown`, `jspdf`-style exports) stop loading for people who never log in.
+### 2. Free Resume Insights — `/free/resume-insights`
+- Same upload (a single upload flow shared with the tool above — results page shows both tabs).
+- **Shown free:** detected skills, experience level estimate, top 3 career matches with a match %, and a one-line "what your resume says about you" summary.
+- **Locked behind signup:** full career match list with salary ranges, skill-gap breakdown, and the learning roadmap.
 
-### 2. Instant paint shell
-Put a lightweight branded loading state directly in `index.html` (logo + headline skeleton, inline CSS, no JS) so the screen is never blank. Add manual Vite chunking so React/Supabase/UI vendor code cache separately across visits.
+Both tools end with the same conversion block: "Save this report + get your skill gap, roadmap and mock interviews — free account".
 
-### 3. Restructure for the 3-second scan
-- Move **Popular Careers** directly under the Features grid — it's the highest-intent second click and currently gets zero traffic buried at position 6.
-- Collapse **Reviews + Stats** into one trust block after How It Works.
-- Blog teaser stays near the footer.
-- Add 3–4 inline text links inside the hero subcopy area ("Data Analyst · Product Manager · Software Engineer guides →") so there's a clickable exit above the fold that isn't signup.
+## Anti-abuse (important — these are unauthenticated AI calls)
 
-### 4. Lower the commitment on the primary CTA
-Right now the only action is "Analyze my resume — free" → `/signup`, a wall. Add a secondary above-the-fold path that delivers value with zero auth: a free **"Check your resume keywords"** teaser or a link straight into a career guide. Every visitor who isn't ready to create an account currently has nowhere to go but back.
+- New `anon_tool_usage` table keyed on a hashed IP + day. Limit: **2 free runs per IP per 24h**, enforced server-side in the edge function (service-role writes only, no client policies — same fail-closed pattern as `usage_counters`).
+- Hard file limits: 2 MB, PDF/DOCX only, rejected server-side.
+- Extracted text truncated before it reaches the model, and the input-hash cooldown from `aiGuard.ts` is reused so identical resumes don't re-bill.
+- Results are returned in the response and held in browser memory/sessionStorage only — nothing anonymous is written to `resume_analysis`. When the visitor signs up, the client re-posts the stored result so their first dashboard is already populated.
 
-### 5. Fix head metadata + filter noise
-- Sync `index.html` title/description/og with the Helmet values; replace the stale `og:image` R2 URL.
-- Preconnect to the Supabase origin so the first auth check doesn't block.
-- Note in reporting that Unknown/CN/MD/RU traffic is bot noise — judge progress on the IN + US segment, not the blended number.
+## Entry points
 
-## What I won't touch
-Auth, payments, edge functions, DB schema, AI logic, pricing. This is presentation + bundling only.
+- Hero: secondary CTA becomes "Check your ATS score free — no signup".
+- Nav: "Free Tools" link.
+- Blog posts (`how-ats-scoring-works` especially) and the career guides get an inline CTA card into the tool.
+- Both pages get their own SEO title/description, JSON-LD, and sitemap entries — "free ATS resume checker" is a high-intent search term worth ranking for.
 
-## Files to change
-- `src/routes/AppRoutes.tsx` — lazy routes + Suspense fallback.
-- `vite.config.ts` — manual vendor chunks.
-- `index.html` — paint shell, metadata sync, preconnect.
-- `src/pages/Landing.tsx` — section reorder, hero inline career links, secondary no-auth CTA.
-- `src/components/landing/PopularCareers.tsx` — minor spacing after the move.
+## Technical notes
 
-## Expected outcome
-Realistically 75% → high-50s/low-60s on the real (non-bot) segment. Load time is the single biggest lever left; copy changes alone won't move it further.
+- New edge function `free-resume-score` with `verify_jwt = false`, which: validates the upload, extracts text with the existing `unpdf`/`fflate` path from `parse-resume`, checks the IP-based limiter, calls the model, and returns a trimmed public payload (it never returns the locked fields, so the paywall can't be bypassed from devtools).
+- Scoring logic in `score-resume/index.ts` (synonyms, industry weights, dependency graph) is extracted into `_shared/resumeScoring.ts` so both the authed and anonymous paths use one implementation.
+- New pages `src/pages/FreeAtsScore.tsx` and `src/pages/FreeResumeInsights.tsx`, lazy-loaded in `AppRoutes.tsx` as public routes, sharing an `src/components/free/ResumeDropzone.tsx` and a `LockedTeaser.tsx`.
+- One migration: `anon_tool_usage` table with grants (`service_role` only), RLS enabled, no client policies.
+
+## Out of scope for now
+
+- No email capture gate (asking for an email before showing the score kills the conversion the tool is meant to create).
+- No anonymous LinkedIn or GitHub tool yet — resume is the highest-intent entry point; add a second tool once this one shows traffic.
