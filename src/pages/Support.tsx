@@ -306,8 +306,8 @@ const BugReportDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
             {screenshot ? (
               <div className="flex items-center justify-between p-2 border rounded-md text-sm">
                 <span className="truncate">{screenshot.name}</span>
-                <button type="button" onClick={() => setScreenshot(null)} className="text-muted-foreground hover:text-destructive">
-                  <X size={16} />
+                <button type="button" onClick={() => setScreenshot(null)} aria-label="Remove screenshot" className="text-muted-foreground hover:text-destructive">
+                  <X size={16} aria-hidden="true" />
                 </button>
               </div>
             ) : (
