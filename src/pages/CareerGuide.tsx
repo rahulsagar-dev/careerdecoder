@@ -28,6 +28,7 @@ const CareerGuide = () => {
         title={`${career.title} Career Guide 2026 — Salary, Skills & Roadmap`}
         description={`${career.shortDescription} Salaries, top skills, day-to-day tasks, and a step-by-step path to become a ${career.title.toLowerCase()} in 2026.`}
         path={`/careers/${career.slug}`}
+        ogType="article"
         jsonLd={jsonLd}
       />
       <Navbar />

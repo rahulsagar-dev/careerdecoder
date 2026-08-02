@@ -34,6 +34,7 @@ const BlogPost = () => {
         title={`${post.title} | Career Decoder`}
         description={post.description}
         path={`/blog/${post.slug}`}
+        ogType="article"
         jsonLd={jsonLd}
       />
       <Navbar />
