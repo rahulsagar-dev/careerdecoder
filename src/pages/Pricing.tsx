@@ -243,8 +243,8 @@ const Pricing = () => {
                         <Tag className="w-4 h-4" /> <span className="font-mono font-semibold">{applied.code}</span> applied
                         {applied.discount_type === "free_extension" && ` — +${applied.extension_days} days free`}
                       </span>
-                      <button onClick={removePromo} className="text-muted-foreground hover:text-foreground">
-                        <X className="w-4 h-4" />
+                      <button onClick={removePromo} aria-label="Remove promo code" className="text-muted-foreground hover:text-foreground">
+                        <X className="w-4 h-4" aria-hidden="true" />
                       </button>
                     </div>
                   ) : (
@@ -260,9 +260,10 @@ const Pricing = () => {
                         variant="outline"
                         size="sm"
                         onClick={applyPromo}
+                        aria-label="Apply promo code"
                         disabled={applyingPromo || !promoInput.trim()}
                       >
-                        {applyingPromo ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                        {applyingPromo ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : "Apply"}
                       </Button>
                     </div>
                   )}
