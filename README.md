@@ -88,6 +88,28 @@ Whether you're a student figuring out your first role, a professional planning a
 - Server-side atomic redemption via `redeem_promo` RPC (single-use per user)
 - 100%-off codes skip Razorpay entirely and activate Pro immediately
 
+### 🎁 Free No-Signup Tools (lead magnets)
+- `/free/ats-score` — instant ATS score with formatting / keyword / impact breakdown
+- `/free/resume-insights` — extracted skills, experience level, and top matching roles
+- Powered by the public `free-resume-score` edge function with IP-based rate limiting (2 runs/day)
+- Blurred `LockedTeaser` sections convert visitors into signups
+
+### 🔗 Referral Program
+- Every user gets a shareable code (`/referrals`)
+- Referrer + referred user each receive 30 days of Pro
+- Rewards capped at 10 referrals per referrer to prevent farming
+- Code minting and redemption run through `private` schema functions behind `get-referral-code` / `apply-referral` edge functions
+
+### 📝 Content & SEO Engine
+- Blog (`/blog`, `/blog/:slug`) and programmatic career guides (`/careers`, `/careers/:slug`)
+- `react-helmet-async` `SEO` component: per-route title, description, canonical, OpenGraph (`og:type=article` on editorial routes), Twitter cards, JSON-LD
+- `sitemap.xml`, `robots.txt`, `llms.txt`, Google Search Console verification
+
+### ⚡ Performance
+- Route-level code splitting (`React.lazy` + Suspense) — landing bundle ~194 KB gz
+- Vite manual chunks (react / supabase / query / charts / flow)
+- Instant-paint branded loading shell in `index.html`, Supabase preconnect
+
 ### ⭐ Community Reviews
 - Users submit ratings + comments from `/leave-review`
 - Reviews publish instantly; admins can reject/reset from `/admin/reviews`
@@ -98,6 +120,7 @@ Whether you're a student figuring out your first role, a professional planning a
 - `/admin/reviews` — moderate the review wall
 - `/admin/promo-codes` — CRUD promo codes with usage limits and expiry
 - All gated behind `is_admin` (stored in a separate role-checked path with escalation triggers)
+
 
 ### 🔐 Auth & Account
 - Email/password sign-up with mandatory email verification screen
@@ -133,7 +156,7 @@ Payments are India-only (Razorpay) for now. Schema is provider-agnostic so Strip
 │                     Supabase Backend                         │
 │   Auth (GoTrue) · PostgreSQL + RLS · Storage · Realtime      │
 │   ┌────────────────────────────────────────────────────────┐ │
-│   │        Deno Edge Functions (18 functions)              │ │
+│   │        Deno Edge Functions (25 functions)              │ │
 │   │  AI · Razorpay · Promo redemption · Usage enforcement  │ │
 │   └────────────────────────────────────────────────────────┘ │
 └─────────┬────────────────────────────────────────┬───────────┘
@@ -189,6 +212,8 @@ Payments are India-only (Razorpay) for now. Schema is provider-agnostic so Strip
 | `validate-promo-code` | Frontend price preview |
 | `admin-promo-codes` | Admin CRUD for promo codes |
 | `check-usage-limit` | Frontend feature-gate lookups |
+| `free-resume-score` | Public, no-auth ATS scoring for the free tools (IP rate-limited) |
+| `get-referral-code` / `apply-referral` | Referral code minting and reward redemption |
 
 All AI functions run through the Lovable AI Gateway with JSON-mode structured output, protected by the shared `aiGuard` cache/dedup layer.
 
@@ -199,8 +224,8 @@ All AI functions run through the Lovable AI Gateway with JSON-mode structured ou
 User data (all RLS-scoped to `auth.uid()`):
 `profiles`, `career_recommendations`, `skill_analysis`, `learning_roadmaps`, `roadmap_steps`, `resume_analysis`, `github_analysis`, `linkedin_analysis`, `interview_sessions`, `interview_messages`, `market_data`, `project_suggestions`, `repo_analysis`, `usage_counters`, `support_tickets`, `bug_reports`.
 
-Billing & growth (service-role only):
-`subscriptions`, `payment_events`, `promo_codes`, `promo_redemptions`, `reviews`.
+Billing & growth (service-role writes only):
+`subscriptions`, `payment_events`, `promo_codes`, `promo_redemptions`, `reviews`, `referrals`, `user_referral_codes`, `active_generations`.
 
 ### Security posture
 - RLS enabled on every user-facing table with `auth.uid()`-scoped policies
@@ -210,6 +235,9 @@ Billing & growth (service-role only):
 - Roles stored in a dedicated table (never on `profiles`)
 - Razorpay webhooks verified with local HMAC-SHA256; secrets whitespace-hardened
 - Promo redemption is atomic via `redeem_promo` RPC (service-role only)
+- Referral logic lives in `private` schema functions, reachable only through service-role `svc_*` wrappers called by edge functions
+- Fail-closed tables (`usage_counters`, `active_generations`, `user_referral_codes`) accept writes only from the service role
+- Public free tools are IP rate-limited server-side and never touch user data
 
 ---
 
