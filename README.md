@@ -212,6 +212,8 @@ Payments are India-only (Razorpay) for now. Schema is provider-agnostic so Strip
 | `validate-promo-code` | Frontend price preview |
 | `admin-promo-codes` | Admin CRUD for promo codes |
 | `check-usage-limit` | Frontend feature-gate lookups |
+| `free-resume-score` | Public, no-auth ATS scoring for the free tools (IP rate-limited) |
+| `get-referral-code` / `apply-referral` | Referral code minting and reward redemption |
 
 All AI functions run through the Lovable AI Gateway with JSON-mode structured output, protected by the shared `aiGuard` cache/dedup layer.
 
