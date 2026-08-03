@@ -235,6 +235,9 @@ Billing & growth (service-role writes only):
 - Roles stored in a dedicated table (never on `profiles`)
 - Razorpay webhooks verified with local HMAC-SHA256; secrets whitespace-hardened
 - Promo redemption is atomic via `redeem_promo` RPC (service-role only)
+- Referral logic lives in `private` schema functions, reachable only through service-role `svc_*` wrappers called by edge functions
+- Fail-closed tables (`usage_counters`, `active_generations`, `user_referral_codes`) accept writes only from the service role
+- Public free tools are IP rate-limited server-side and never touch user data
 
 ---
 
