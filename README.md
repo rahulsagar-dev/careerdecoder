@@ -224,8 +224,8 @@ All AI functions run through the Lovable AI Gateway with JSON-mode structured ou
 User data (all RLS-scoped to `auth.uid()`):
 `profiles`, `career_recommendations`, `skill_analysis`, `learning_roadmaps`, `roadmap_steps`, `resume_analysis`, `github_analysis`, `linkedin_analysis`, `interview_sessions`, `interview_messages`, `market_data`, `project_suggestions`, `repo_analysis`, `usage_counters`, `support_tickets`, `bug_reports`.
 
-Billing & growth (service-role only):
-`subscriptions`, `payment_events`, `promo_codes`, `promo_redemptions`, `reviews`.
+Billing & growth (service-role writes only):
+`subscriptions`, `payment_events`, `promo_codes`, `promo_redemptions`, `reviews`, `referrals`, `user_referral_codes`, `active_generations`.
 
 ### Security posture
 - RLS enabled on every user-facing table with `auth.uid()`-scoped policies
