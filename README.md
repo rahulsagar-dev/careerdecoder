@@ -156,7 +156,7 @@ Payments are India-only (Razorpay) for now. Schema is provider-agnostic so Strip
 │                     Supabase Backend                         │
 │   Auth (GoTrue) · PostgreSQL + RLS · Storage · Realtime      │
 │   ┌────────────────────────────────────────────────────────┐ │
-│   │        Deno Edge Functions (18 functions)              │ │
+│   │        Deno Edge Functions (25 functions)              │ │
 │   │  AI · Razorpay · Promo redemption · Usage enforcement  │ │
 │   └────────────────────────────────────────────────────────┘ │
 └─────────┬────────────────────────────────────────┬───────────┘
