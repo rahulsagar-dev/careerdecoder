@@ -88,6 +88,28 @@ Whether you're a student figuring out your first role, a professional planning a
 - Server-side atomic redemption via `redeem_promo` RPC (single-use per user)
 - 100%-off codes skip Razorpay entirely and activate Pro immediately
 
+### 🎁 Free No-Signup Tools (lead magnets)
+- `/free/ats-score` — instant ATS score with formatting / keyword / impact breakdown
+- `/free/resume-insights` — extracted skills, experience level, and top matching roles
+- Powered by the public `free-resume-score` edge function with IP-based rate limiting (2 runs/day)
+- Blurred `LockedTeaser` sections convert visitors into signups
+
+### 🔗 Referral Program
+- Every user gets a shareable code (`/referrals`)
+- Referrer + referred user each receive 30 days of Pro
+- Rewards capped at 10 referrals per referrer to prevent farming
+- Code minting and redemption run through `private` schema functions behind `get-referral-code` / `apply-referral` edge functions
+
+### 📝 Content & SEO Engine
+- Blog (`/blog`, `/blog/:slug`) and programmatic career guides (`/careers`, `/careers/:slug`)
+- `react-helmet-async` `SEO` component: per-route title, description, canonical, OpenGraph (`og:type=article` on editorial routes), Twitter cards, JSON-LD
+- `sitemap.xml`, `robots.txt`, `llms.txt`, Google Search Console verification
+
+### ⚡ Performance
+- Route-level code splitting (`React.lazy` + Suspense) — landing bundle ~194 KB gz
+- Vite manual chunks (react / supabase / query / charts / flow)
+- Instant-paint branded loading shell in `index.html`, Supabase preconnect
+
 ### ⭐ Community Reviews
 - Users submit ratings + comments from `/leave-review`
 - Reviews publish instantly; admins can reject/reset from `/admin/reviews`
@@ -98,6 +120,7 @@ Whether you're a student figuring out your first role, a professional planning a
 - `/admin/reviews` — moderate the review wall
 - `/admin/promo-codes` — CRUD promo codes with usage limits and expiry
 - All gated behind `is_admin` (stored in a separate role-checked path with escalation triggers)
+
 
 ### 🔐 Auth & Account
 - Email/password sign-up with mandatory email verification screen
