@@ -5,21 +5,21 @@ import Footer from "@/components/layout/Footer";
 import { SEO } from "@/components/SEO";
 
 const SECTIONS = [
-  { id: "introduction", title: "1. Introduction", body: "Career Decode (\"we\", \"us\") operates an AI-powered career guidance platform. This Privacy Policy explains what data we collect, how we use it, and the choices you have." },
+  { id: "introduction", title: "1. Introduction", body: "Career Decoder (\"we\", \"us\") operates an AI-powered career guidance platform. This Privacy Policy explains what data we collect, how we use it, and the choices you have." },
   { id: "information-we-collect", title: "2. Information We Collect", body: "We collect account information (name, email), profile information you submit (skills, experience, goals), uploaded files such as resumes, usage data (pages visited, features used), and technical data (browser, device, IP)." },
   { id: "how-we-use", title: "3. How We Use Your Information", body: "To provide and personalize the service, generate AI recommendations, communicate updates and security notices, prevent abuse, and improve the product." },
   { id: "data-sharing", title: "4. Data Sharing and Third Parties", body: "We share data only with service providers needed to run the product: Supabase (authentication, database, storage), our AI Gateway (model inference for recommendations), and analytics tools you have opted into. We never sell your personal data." },
   { id: "data-retention", title: "5. Data Retention", body: "We retain your information as long as your account is active. You can request deletion at any time; backups are purged on a rolling schedule." },
   { id: "your-rights", title: "6. Your Rights", body: "Depending on your jurisdiction (e.g., GDPR, CCPA), you have rights to access, correct, delete, export, or restrict processing of your personal data. Contact us to exercise these rights." },
   { id: "security", title: "7. Security Measures", body: "We use encryption in transit (TLS), authenticated row-level security on the database, signed storage URLs, and least-privilege access controls for our team. No system is 100% secure." },
-  { id: "children", title: "8. Children's Privacy", body: "Career Decode is not directed to children under 16, and we do not knowingly collect personal data from them. If you believe we have, contact us so we can delete it." },
+  { id: "children", title: "8. Children's Privacy", body: "Career Decoder is not directed to children under 16, and we do not knowingly collect personal data from them. If you believe we have, contact us so we can delete it." },
   { id: "changes", title: "9. Changes to This Policy", body: "We may update this policy as the product evolves. We will post the new version here and update the \"Last Updated\" date." },
   { id: "contact", title: "10. Contact Information", body: "Questions about privacy? Email support@careerdecode.app or visit the Support page." },
 ];
 
 const PrivacyPolicy = () => (
   <div className="min-h-screen flex flex-col bg-background">
-    <SEO title="Privacy Policy — Career Decode" description="How Career Decode collects, uses, and protects your personal data." path="/privacy-policy" />
+    <SEO title="Privacy Policy — Career Decoder" description="How Career Decoder collects, uses, and protects your personal data." path="/privacy-policy" />
     <main className="container max-w-3xl py-10 flex-1">
       <Button variant="ghost" size="sm" asChild className="mb-4">
         <Link to="/"><ArrowLeft className="h-4 w-4 mr-1" /> Back</Link>

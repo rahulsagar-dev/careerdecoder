@@ -50,11 +50,11 @@ const Signup = () => {
   if (submitted) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-8">
-        <SEO title="Verify your Email — Career Decode" description="Check your inbox to verify your Career Decode account." path="/signup" />
+        <SEO title="Verify your Email — Career Decoder" description="Check your inbox to verify your Career Decoder account." path="/signup" />
         <Card className="w-full max-w-md shadow-lg rounded-xl border-0">
           <CardHeader className="text-center space-y-2">
             <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent mx-auto">
-              Career Decode
+              Career Decoder
             </Link>
             <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl">📧</div>
             <h1 className="text-xl font-semibold">Check your email</h1>
@@ -84,11 +84,11 @@ const Signup = () => {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-8">
-      <SEO title="Create your Account — Career Decode" description="Sign up for Career Decode to get AI-powered career recommendations and personalized learning roadmaps." path="/signup" />
+      <SEO title="Create your Account — Career Decoder" description="Sign up for Career Decoder to get AI-powered career recommendations and personalized learning roadmaps." path="/signup" />
       <Card className="w-full max-w-md shadow-lg rounded-xl border-0">
         <CardHeader className="text-center space-y-1">
           <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent mx-auto">
-            Career Decode
+            Career Decoder
           </Link>
           <h1 className="text-xl font-semibold">Create your Account</h1>
           <CardDescription>Start your AI-powered career journey</CardDescription>

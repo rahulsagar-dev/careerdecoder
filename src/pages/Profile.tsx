@@ -106,7 +106,7 @@ const Profile = () => {
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-[hsl(260,84%,60%)] flex items-center justify-center">
             <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
           </div>
-          <span className="text-sm font-bold bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent">Career Decode</span>
+          <span className="text-sm font-bold bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent">Career Decoder</span>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>

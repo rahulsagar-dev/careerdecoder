@@ -33,8 +33,8 @@ const Support = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Support & Help — Career Decode"
-        description="Get help with Career Decode. Contact us, report a bug, or browse frequently asked questions about AI career guidance."
+        title="Support & Help — Career Decoder"
+        description="Get help with Career Decoder. Contact us, report a bug, or browse frequently asked questions about AI career guidance."
         path="/support"
         jsonLd={{
           "@context": "https://schema.org",

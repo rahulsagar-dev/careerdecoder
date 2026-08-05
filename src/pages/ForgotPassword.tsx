@@ -38,7 +38,7 @@ const ForgotPassword = () => {
       <Card className="w-full max-w-md shadow-lg rounded-xl border-0">
         <CardHeader className="text-center space-y-1">
           <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent mx-auto">
-            Career Decode
+            Career Decoder
           </Link>
           <CardTitle className="text-xl">Forgot password?</CardTitle>
           <CardDescription>

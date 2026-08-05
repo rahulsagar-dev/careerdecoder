@@ -1,8 +1,8 @@
-# Career Decode
+# Career Decoder
 
-> Career Decode is an AI-powered platform for personalized career recommendations, skill gap analysis, learning roadmaps, resume and LinkedIn intelligence, and interview preparation.
+> Career Decoder is an AI-powered platform for personalized career recommendations, skill gap analysis, learning roadmaps, resume and LinkedIn intelligence, and interview preparation.
 
-Career Decode helps professionals identify high-fit careers, close skill gaps with tailored learning plans, sharpen their resume and portfolio, and prepare for interviews with adaptive AI mock sessions.
+Career Decoder helps professionals identify high-fit careers, close skill gaps with tailored learning plans, sharpen their resume and portfolio, and prepare for interviews with adaptive AI mock sessions.
 
 ## Pages
 
