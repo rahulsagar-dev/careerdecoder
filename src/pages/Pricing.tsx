@@ -166,7 +166,7 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <SEO title="Pricing — Career Decode" description="Simple plans for Career Decode. Choose monthly or yearly and unlock AI-powered career guidance, roadmaps, and interview prep." path="/pricing" />
+      <SEO title="Pricing — Career Decoder" description="Simple plans for Career Decoder. Choose monthly or yearly and unlock AI-powered career guidance, roadmaps, and interview prep." path="/pricing" />
       <Navbar />
       <main className="flex-1 py-16 px-4">
         <div className="max-w-5xl mx-auto">

@@ -30,7 +30,7 @@ const steps = [
 const Landing = () => (
   <div className="min-h-screen flex flex-col">
     <SEO
-      title="Career Decoder — AI Resume Score, Skill Gaps & Interview Prep"
+      title="Career Decoder — AI Resume Score & Interview Prep"
       description="Get an ATS resume score, a personalized skill-gap report, a learning roadmap, and AI mock interviews. Free forever plan, built for the Indian job market."
       path="/"
     />

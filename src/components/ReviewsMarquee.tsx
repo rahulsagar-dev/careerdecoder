@@ -116,7 +116,7 @@ const ReviewsMarquee = () => {
         <div className="text-center space-y-3">
           <h2 className="text-3xl md:text-4xl font-bold">What Our Users Say</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Real feedback from people using Career Decode to shape their future.
+            Real feedback from people using Career Decoder to shape their future.
           </p>
         </div>
         <div className="space-y-4">

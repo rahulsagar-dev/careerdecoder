@@ -49,13 +49,13 @@ const Login = () => {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-8">
-      <SEO title="Login — Career Decode" description="Log in to your Career Decode account to access AI career guidance." path="/login" />
+      <SEO title="Login — Career Decoder" description="Log in to your Career Decoder account to access AI career guidance." path="/login" />
       <Card className="w-full max-w-md shadow-lg rounded-xl border-0">
         <CardHeader className="text-center space-y-1">
           <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent mx-auto">
-            Career Decode
+            Career Decoder
           </Link>
-          <h1 className="text-xl font-semibold">Login to Career Decode</h1>
+          <h1 className="text-xl font-semibold">Login to Career Decoder</h1>
           <CardDescription>Enter your credentials to access your account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

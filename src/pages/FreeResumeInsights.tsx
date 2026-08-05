@@ -19,7 +19,7 @@ const jsonLd = {
 const FreeResumeInsights = () => (
   <div className="min-h-screen flex flex-col">
     <SEO
-      title="Free Resume Insights — What Your Resume Says About You | Career Decoder"
+      title="Free Resume Insights Tool | Career Decoder"
       description="Upload your resume and see the skills recruiters actually read, your experience level, and your top matching roles. Free, no account needed."
       path="/free/resume-insights"
       jsonLd={jsonLd}

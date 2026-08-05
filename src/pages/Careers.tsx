@@ -8,7 +8,7 @@ import { careers } from "@/data/careers";
 const Careers = () => (
   <div className="min-h-screen flex flex-col">
     <SEO
-      title="Career Guides — Salaries, Skills & Roadmaps | Career Decoder"
+      title="Career Guides: Salaries & Skills | Career Decoder"
       description="Explore in-depth guides for the top tech careers in 2026 — salary ranges, required skills, day-to-day tasks, and how to break in."
       path="/careers"
     />

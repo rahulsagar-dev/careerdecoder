@@ -87,7 +87,7 @@ function SidebarNav() {
           </div>
           {!collapsed && (
             <span className="text-base font-bold bg-gradient-to-r from-primary to-[hsl(260,84%,60%)] bg-clip-text text-transparent truncate">
-              Career Decode
+              Career Decoder
             </span>
           )}
         </div>

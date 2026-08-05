@@ -163,7 +163,7 @@ ${report.career_fit.map(c => `<div class="career-item"><span class="career-score
 <div class="action-section"><h3>📅 Mid Term (3-6 months)</h3><ul>${report.action_plan.mid_term.map(s => `<li>${s}</li>`).join("")}</ul></div>
 <div class="action-section"><h3>📅 Long Term (6-12 months)</h3><ul>${report.action_plan.long_term.map(s => `<li>${s}</li>`).join("")}</ul></div>
 
-<div class="footer">Career Decode — AI-Powered Career Intelligence Platform</div>
+<div class="footer">Career Decoder — AI-Powered Career Intelligence Platform</div>
 </body></html>`;
 
     printWindow.document.write(html);

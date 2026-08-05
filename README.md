@@ -1,4 +1,4 @@
-# 🎯 Career Decode — AI-Powered Career Intelligence Platform
+# 🎯 Career Decoder — AI-Powered Career Intelligence Platform
 
 > Your personal AI career advisor that analyzes skills, recommends careers, simulates interviews, audits your LinkedIn/GitHub, and builds actionable roadmaps — all in one platform.
 
@@ -14,11 +14,11 @@
 
 ---
 
-## 📋 What is Career Decode?
+## 📋 What is Career Decoder?
 
-**Career Decode** is a full-stack AI career intelligence platform that helps students and professionals navigate their career journey with data-driven insights. It combines real-time market intelligence, personalized skill gap analysis, adaptive interview simulation, resume + LinkedIn + GitHub audits, and recruiter-level career reports into a single cohesive platform — powered by Google Gemini via the Lovable AI Gateway.
+**Career Decoder** is a full-stack AI career intelligence platform that helps students and professionals navigate their career journey with data-driven insights. It combines real-time market intelligence, personalized skill gap analysis, adaptive interview simulation, resume + LinkedIn + GitHub audits, and recruiter-level career reports into a single cohesive platform — powered by Google Gemini via the Lovable AI Gateway.
 
-Whether you're a student figuring out your first role, a professional planning a career switch, or someone preparing for interviews — Career Decode gives you a structured, AI-guided path forward.
+Whether you're a student figuring out your first role, a professional planning a career switch, or someone preparing for interviews — Career Decoder gives you a structured, AI-guided path forward.
 
 ---
 

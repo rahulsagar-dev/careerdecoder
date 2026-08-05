@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <footer className="border-t border-border bg-background py-8">
       <div className="container flex flex-col md:flex-row items-center justify-between gap-4">
-        <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Career Decode. All rights reserved.</p>
+        <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Career Decoder. All rights reserved.</p>
         <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
           <Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</Link>
           <Link to="/careers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Career Guides</Link>

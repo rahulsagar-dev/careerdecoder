@@ -32,7 +32,7 @@ const ReviewPromptBanner = () => {
         <Star className="h-5 w-5 text-primary-foreground fill-primary-foreground" />
       </div>
       <div className="flex-1">
-        <p className="font-semibold">Enjoying Career Decode?</p>
+        <p className="font-semibold">Enjoying Career Decoder?</p>
         <p className="text-sm text-muted-foreground">Leave a quick review — it takes 30 seconds and helps others.</p>
       </div>
       <div className="flex gap-2">

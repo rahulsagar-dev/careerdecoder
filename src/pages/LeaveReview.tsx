@@ -99,7 +99,7 @@ const LeaveReview = () => {
         </Link>
         <div>
           <h1 className="text-3xl font-bold">Leave a Review</h1>
-          <p className="text-muted-foreground mt-1">Share your experience with Career Decode.</p>
+          <p className="text-muted-foreground mt-1">Share your experience with Career Decoder.</p>
         </div>
 
         {loading ? (
