@@ -19,7 +19,7 @@ const jsonLd = {
 const FreeAtsScore = () => (
   <div className="min-h-screen flex flex-col">
     <SEO
-      title="Free ATS Resume Score Checker — No Signup | Career Decoder"
+      title="Free ATS Resume Score Checker | Career Decoder"
       description="Check how your resume scores against applicant tracking systems. Instant ATS score, formatting and keyword breakdown, plus fixes. Free, no account needed."
       path="/free/ats-score"
       jsonLd={jsonLd}
